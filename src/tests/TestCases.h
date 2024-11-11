@@ -142,6 +142,9 @@ class DataDim
                 return 2;
             case FP32:
                 return 4;
+            // ($add) 64 bit precision for regular dram execution
+            case INT64:
+                return 8;
             default:
                 return 0;
         }
