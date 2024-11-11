@@ -321,30 +321,68 @@ union BurstType
         return (memcmp(this, &rhs, 32));
     }
 
-    BurstType operator+(const BurstType& rhs) const
-    {
-        BurstType ret;
-        for (int i = 0; i < 16; i++)
-        {
-            ret.fp16Data_[i] = fp16Data_[i] + rhs.fp16Data_[i];
-        }
-        return ret;
-    }
-    BurstType operator*(const BurstType& rhs) const
-    {
-        BurstType ret;
-        for (int i = 0; i < 16; i++)
-        {
-            ret.fp16Data_[i] = fp16Data_[i] * rhs.fp16Data_[i];
-        }
-        return ret;
-    }
+    // ! Disable fp16 operations
+    // BurstType operator+(const BurstType& rhs) const
+    // {
+    //     BurstType ret;
+    //     for (int i = 0; i < 16; i++)
+    //     {
+    //         ret.fp16Data_[i] = fp16Data_[i] + rhs.fp16Data_[i];
+    //     }
+    //     return ret;
+    // }
+    // BurstType operator*(const BurstType& rhs) const
+    // {
+    //     BurstType ret;
+    //     for (int i = 0; i < 16; i++)
+    //     {
+    //         ret.fp16Data_[i] = fp16Data_[i] * rhs.fp16Data_[i];
+    //     }
+    //     return ret;
+    // }
 
     fp16 fp16Data_[16];
     uint8_t u8Data_[32];
     float fp32Data_[8];
     uint32_t u32Data_[8];
     uint16_t u16Data_[16];
+
+    // ($add) support for 64 bit burst type
+    uint64_t u64Data_[4];
+
+
+    BurstType(uint64_t x0, uint64_t x1, uint64_t x2, uint64_t x3) {
+        set(x0, x1, x2, x3);
+    }
+
+    void set(uint64_t x0, uint64_t x1, uint64_t x2, uint64_t x3) {
+        u32Data_[0] = x0;
+        u32Data_[1] = x1;
+        u32Data_[2] = x2;
+        u32Data_[3] = x3;
+    } 
+
+    void set(uint64_t x) {
+        set(x, x, x, x);
+    }
+    
+    BurstType operator+(const BurstType& rhs) const{
+        BurstType ret;
+        for (int i = 0; i < 4; i++){
+            ret.u64Data_[i] = u64Data_[i] + rhs.u64Data_[i];
+        }
+        return ret;
+    }
+
+
+    BurstType operator*(const BurstType& rhs) const{
+        BurstType ret;
+        for (int i = 0; i < 4; i++){
+            ret.u64Data_[i] = u64Data_[i] * rhs.u64Data_[i];
+        }
+        return ret;
+    }
+    
 };
 
 struct NumpyBurstType

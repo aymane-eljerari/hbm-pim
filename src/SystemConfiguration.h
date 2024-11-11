@@ -119,7 +119,9 @@ enum PIMPrecision
 {
     FP16,
     INT8,
-    FP32
+    FP32,
+    // ($add) support for INT64
+    INT64
 };
 
 enum class dramMode
@@ -439,6 +441,11 @@ class PIMConfiguration
         {
             return FP32;
         }
+        // ($add) support for 64 bit precision
+        else if (param == "INT64")
+        {
+            return INT64;
+        }
         throw invalid_argument("Invalid PIM precision");
     }
 
@@ -456,6 +463,11 @@ class PIMConfiguration
         else if (param == "FP32")
         {
             return 4;
+        }
+        // ($add) support for 64 bit precision
+        else if (param == "INT64")
+        {
+            return 8;
         }
         throw invalid_argument("Invalid PIM data length");
     }

@@ -37,6 +37,14 @@ void PIMBlock::add(BurstType& dstBst, BurstType& src0Bst, BurstType& src1Bst)
             dstBst.fp32Data_[i] = src0Bst.fp32Data_[i] + src1Bst.fp32Data_[i];
         }
     }
+    // ($add) support for 64bit add
+    else if (pimPrecision_ == INT64)
+    {
+        for (int i = 0; i < 4; i++)
+        {
+            dstBst.u64Data_[i] = src0Bst.u64Data_[i] + src1Bst.u64Data_[i];
+        }
+    }
     else
         dstBst = src0Bst + src1Bst;
 }
@@ -55,6 +63,14 @@ void PIMBlock::mul(BurstType& dstBst, BurstType& src0Bst, BurstType& src1Bst)
         for (int i = 0; i < 8; i++)
         {
             dstBst.fp32Data_[i] = src0Bst.fp32Data_[i] * src1Bst.fp32Data_[i];
+        }
+    }
+    // ($add) support for 64bit mult
+    else if (pimPrecision_ == INT64)
+    {
+        for (int i = 0; i < 4; i++)
+        {
+            dstBst.u64Data_[i] = src0Bst.u64Data_[i] * src1Bst.u64Data_[i];
         }
     }
     else
