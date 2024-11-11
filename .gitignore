@@ -39,3 +39,6 @@ tags
 .sconsign.dblite
 bin
 
+
+# aymane's gitignore additions
+.vscode/
