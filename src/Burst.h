@@ -356,10 +356,10 @@ union BurstType
     }
 
     void set(uint64_t x0, uint64_t x1, uint64_t x2, uint64_t x3) {
-        u32Data_[0] = x0;
-        u32Data_[1] = x1;
-        u32Data_[2] = x2;
-        u32Data_[3] = x3;
+        u64Data_[0] = x0;
+        u64Data_[1] = x1;
+        u64Data_[2] = x2;
+        u64Data_[3] = x3;
     } 
 
     void set(uint64_t x) {
