@@ -1,0 +1,26 @@
+# Use the official Ubuntu 22.04 base image
+FROM ubuntu:22.04
+
+# Set non-interactive mode for apt
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Update package lists and install only essential dependencies
+RUN apt update && \
+    apt install -y --no-install-recommends \
+        scons \
+        libgtest-dev \
+        g++ \
+	gdb \
+    && rm -rf /var/lib/apt/lists/*
+
+# Clean up unnecessary files to reduce image size
+RUN apt autoremove -y && apt clean
+
+# Optional: Set the working directory
+WORKDIR /app
+
+# Optional: Copy your source code into the container
+# COPY . /app
+
+# Optional: Command to run when starting the container
+CMD ["bash"]
