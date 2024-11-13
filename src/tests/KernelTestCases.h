@@ -24,8 +24,11 @@ using namespace DRAMSim;
 ::testing::AssertionResult fp16EqualHelper(const char* m_expr, const char* n_expr, fp16 m, fp16 n);
 ::testing::AssertionResult fp16BstEqualHelper(const char* m_expr, const char* n_expr,
                                               DRAMSim::BurstType mb, DRAMSim::BurstType nb);
+::testing::AssertionResult int64BstEqualHelper(const char* m_expr, const char* n_expr, BurstType mb,
+                                              BurstType nb);
 #define EXPECT_FP16_BST_EQ(val1, val2) EXPECT_PRED_FORMAT2(fp16BstEqualHelper, val1, val2)
 #define EXPECT_FP16_EQ(val1, val2) EXPECT_PRED_FORMAT2(fp16EqualHelper, val1, val2)
+#define EXPECT_INT64_BST_EQ(val1, val2) EXPECT_PRED_FORMAT2(int64BstEqualHelper, val1, val2)
 
 class TestStats
 {
@@ -163,6 +166,7 @@ class PIMKernelFixture : public testing::Test
                 break;
             }
         }
+        // ? Running once here
         kernel->runPIM();
         return result;
     }
@@ -188,7 +192,8 @@ class PIMKernelFixture : public testing::Test
             {
                 for (int i = 0; i < num_tests; i++)
                 {
-                    EXPECT_FP16_BST_EQ(result_[i], precalculated_result.getBurst(i));
+                    // EXPECT_FP16_BST_EQ(result_[i], precalculated_result.getBurst(i));
+                    EXPECT_INT64_BST_EQ(result_[i], precalculated_result.getBurst(i));
                 }
                 return;
             }
@@ -306,4 +311,37 @@ class PIMKernelFixture : public testing::Test
 
     return ::testing::AssertionSuccess();
 }
+
+// TODO: implement the INT64Equal function to compare two values.
+::testing::AssertionResult int64BstEqualHelper(const char* m_expr, const char* n_expr, BurstType mb,
+                                              BurstType nb)
+{
+    for (int i = 0; i < 4; i++)
+    {
+        uint64_t m = mb.u64Data_[i];
+        uint64_t n = nb.u64Data_[i];
+        // fp16i mi(m);
+        // fp16i ni(n);
+
+        if (m == n)
+        {
+            INC_NUM_PASSED();
+        }
+        // else if (fp16Equal(m, n, 256, 0.7))
+        // {
+        //     INC_NUM_PASSED();
+        // }
+        else
+        {
+            INC_NUM_FAILED();
+            INSERT_TO_FAILED_VECTOR(m, n);
+            return ::testing::AssertionFailure()
+                   << m_expr << " and " << n_expr << " (" << m << " and "
+                   << n << ") are not the same ";
+        }
+    }
+
+    return ::testing::AssertionSuccess();
+}
+
 #endif

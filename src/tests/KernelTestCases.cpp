@@ -111,10 +111,12 @@ TEST_F(PIMKernelFixture, add)
     uint32_t output_dim = 1024 * 1024;
     uint32_t input_dim = output_dim;
 
+    // boolean changed to false to loadDummyData instead of pre-existing weights
     DataDim *dim_data = new DataDim(KernelType::ADD, batch_size, output_dim, input_dim, true);
     dim_data->printDim(KernelType::ADD);
 
     result_ = getResultPIM(KernelType::ADD, dim_data, kernel, result_);
+    // ? Why are we runing kernel->runPIM twice? First inside getResultPIM() and second time below this comment.
     kernel->runPIM();
 
     testStatsClear();

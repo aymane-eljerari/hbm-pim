@@ -502,7 +502,10 @@ inline void LoadArrayFromNumpy(const std::string& filename, std::vector<unsigned
     data.resize(size);
 
     // read the data
-    stream.read(reinterpret_cast<char*>(data.data()), sizeof(Scalar) * size);
+    // fp16
+    // stream.read(reinterpret_cast<char*>(data.data()), sizeof(Scalar) * size);
+    // UINT64
+    stream.read(reinterpret_cast<char*>(data.data()), sizeof(uint64_t) * size);
 }
 
 } // namespace npy

@@ -189,9 +189,13 @@ class DataDim
             }
             case KernelType::ADD:
             {
-                input_npbst_.loadFp16("data/add/resadd_input0_" + input_dim_str + ".npy");
-                input1_npbst_.loadFp16("data/add/resadd_input1_" + input_dim_str + ".npy");
-                output_npbst_.loadFp16("data/add/resadd_output_" + input_dim_str + ".npy");
+                // input_npbst_.loadFp16("data/add/resadd_input0_" + input_dim_str + ".npy");
+                // input1_npbst_.loadFp16("data/add/resadd_input1_" + input_dim_str + ".npy");
+                // output_npbst_.loadFp16("data/add/resadd_output_" + input_dim_str + ".npy");
+
+                input_npbst_.loadint64("data/add/resadd_input0_" + input_dim_str + ".npy");
+                input1_npbst_.loadint64("data/add/resadd_input1_" + input_dim_str + ".npy");
+                output_npbst_.loadint64("data/add/resadd_output_" + input_dim_str + ".npy");
 
                 output_dim_ = bShape1ToDim(output_npbst_.getTotalDim());
                 input_dim_ = bShape1ToDim(input_npbst_.getTotalDim());
@@ -260,11 +264,24 @@ class DataDim
             {
                 input_npbst_.shape.push_back(batch_size_);
                 input_npbst_.shape.push_back(input_dim_);
+                // printf("shape[0]: %d", (int)input_npbst_.shape[0]);
+                // printf("shape[1]: %d", (int)input_npbst_.shape[1]);
+                // ? Why is the divisor set to 16?
+                // ? How is the data organized physically in memory?
+                // Hypothesis
+                // The data loaded has shape (batch_size, input_dim)
+                // We need to partition the data accross each PIM BLOCK
+                // There are 16x FP16 ALUs per PIM BLOCK
+                // If we use 4x INT64 ALUS per PIM BLOCK, then divisor should be 4?
+
                 input_npbst_.loadTobShape(16);
+                // input_npbst_.loadDummyint64();
 
                 output_npbst_.shape.push_back(batch_size_);
                 output_npbst_.shape.push_back(output_dim_);
+
                 output_npbst_.loadTobShape(16);
+                // input_npbst_.loadDummyint64();
 
                 return;
             }

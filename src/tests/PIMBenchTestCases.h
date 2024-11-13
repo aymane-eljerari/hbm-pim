@@ -29,13 +29,13 @@ class PIMBenchTestCase
         mem_ = make_shared<MultiChannelMemorySystem>("ini/HBM2_samsung_2M_16B_x64.ini",
                                                      "system_hbm_64ch.ini", ".", "example_app",
                                                      256 * 64 * 2);
-        // pim_mem_ = make_shared<MultiChannelMemorySystem>("ini/HBM2_samsung_2M_16B_x64.ini",
-        //                                                  "system_hbm_64ch.ini", ".", "example_app",
-        //                                                  256 * 64 * 2);
-        // ($add) pin memory configuration support for 64bit 
         pim_mem_ = make_shared<MultiChannelMemorySystem>("ini/HBM2_samsung_2M_16B_x64.ini",
-                                                         "system_hbm_64ch_alu64.ini", ".", "example_app",
+                                                         "system_hbm_64ch.ini", ".", "example_app",
                                                          256 * 64 * 2);
+        // ($add) pin memory configuration support for 64bit 
+        // pim_mem_ = make_shared<MultiChannelMemorySystem>("ini/HBM2_samsung_2M_16B_x64.ini",
+        //                                                  "system_hbm_64ch_alu64.ini", ".", "example_app",
+        //                                                  256 * 64 * 2);
         // # of pim channel = 64, # of pim rank = 1
         kernel_ = make_shared<PIMKernel>(pim_mem_, 64, 1);
         dim_data_ = new DataDim(kernel_type_, batch_, out_, in_, false);

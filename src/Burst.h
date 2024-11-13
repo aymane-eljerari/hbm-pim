@@ -387,10 +387,15 @@ union BurstType
 
 struct NumpyBurstType
 {
+    // ? What is the difference between shape, and bShape
+
     vector<unsigned long> shape;
     vector<float> data;
     vector<uint16_t> u16Data;
     vector<unsigned long> bShape;
+    vector<uint64_t> u64Data;
+
+    // Vector of Burst Types
     vector<BurstType> bData;
     enum precision
     {
@@ -409,14 +414,39 @@ struct NumpyBurstType
 
     void loadTobShape(double divisor)
     {
+        // loop over the dimensions 
         for (int i = 0; i < shape.size(); i++)
         {
+            // check if this is the last dimension
+            // ? Why is are we handling the last dimension differently that all previous dimensions?
+            // ? What is the purpose of the divisor?
+            // It seems like the divisor is partitioning the data accross all ALUs within a PIM block
+            // Since the partitioning is done on the last dimension, assuming 2D data, the divisor paritions
+            // column wise
             if (i == shape.size() - 1)
                 bShape.push_back(ceil(shape[i] / divisor));
             else
                 bShape.push_back(shape[i]);
         }
     }
+
+    // void loadDummyint64(){
+    //     loadTobShape((double)4);
+    //     int total_data_size = 1;
+    //     for (int i = 0; i < bShape.size(); i++) {
+    //         total_data_size *= (int)bShape[i];
+    //     }
+    //     printf("Total Data Size: %d", total_data_size);
+    //     u64Data.resize(total_data_size);
+    //     for (int i = 0; i < total_data_size; i++){
+    //         u64Data[i] = (uint64_t)i;
+    //     }
+    //     for (int i = 0; i < u64Data.size(); i += 4){
+    //         BurstType burst((u64Data[i]), (u64Data[i + 1]), (u64Data[i + 2]), (u64Data[i + 3]));
+    //         bData.push_back(burst);
+
+    //     }
+    // }
 
     void loadFp32(string filename)
     {
@@ -441,6 +471,17 @@ struct NumpyBurstType
                             (u16Data[i + 8]), (u16Data[i + 9]), (u16Data[i + 10]),
                             (u16Data[i + 11]), (u16Data[i + 12]), (u16Data[i + 13]),
                             (u16Data[i + 14]), (u16Data[i + 15]));
+            bData.push_back(burst);
+        }
+    }
+
+    void loadint64(string filename)
+    {
+        npy::LoadArrayFromNumpy(filename, shape, u64Data);
+        loadTobShape((double)4);
+        for (int i = 0; i < u64Data.size(); i += 4)
+        {
+            BurstType burst((u16Data[i]), (u16Data[i + 1]), (u16Data[i + 2]), (u16Data[i + 3]));
             bData.push_back(burst);
         }
     }
