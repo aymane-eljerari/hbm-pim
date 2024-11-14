@@ -193,9 +193,9 @@ class DataDim
                 // input1_npbst_.loadFp16("data/add/resadd_input1_" + input_dim_str + ".npy");
                 // output_npbst_.loadFp16("data/add/resadd_output_" + input_dim_str + ".npy");
 
-                input_npbst_.loadint64("data/add/resadd_input0_" + input_dim_str + ".npy");
-                input1_npbst_.loadint64("data/add/resadd_input1_" + input_dim_str + ".npy");
-                output_npbst_.loadint64("data/add/resadd_output_" + input_dim_str + ".npy");
+                input_npbst_.loadint64("data/add/resadd_input0_u64_" + input_dim_str + ".npy");
+                input1_npbst_.loadint64("data/add/resadd_input1_u64_" + input_dim_str + ".npy");
+                output_npbst_.loadint64("data/add/resadd_output_u64_" + input_dim_str + ".npy");
 
                 output_dim_ = bShape1ToDim(output_npbst_.getTotalDim());
                 input_dim_ = bShape1ToDim(input_npbst_.getTotalDim());
@@ -205,9 +205,14 @@ class DataDim
             }
             case KernelType::MUL:
             {
-                input_npbst_.loadFp16("data/mul/eltmul_input0_" + input_dim_str + ".npy");
-                input1_npbst_.loadFp16("data/mul/eltmul_input1_" + input_dim_str + ".npy");
-                output_npbst_.loadFp16("data/mul/eltmul_output_" + input_dim_str + ".npy");
+                // input_npbst_.loadFp16("data/mul/eltmul_input0_" + input_dim_str + ".npy");
+                // input1_npbst_.loadFp16("data/mul/eltmul_input1_" + input_dim_str + ".npy");
+                // output_npbst_.loadFp16("data/mul/eltmul_output_" + input_dim_str + ".npy");
+
+                input_npbst_.loadint64("data/mul/eltmul_output_u64_" + input_dim_str + ".npy");
+                input1_npbst_.loadint64("data/mul/eltmul_output_u64_" + input_dim_str + ".npy");
+                output_npbst_.loadint64("data/mul/eltmul_output_u64_" + input_dim_str + ".npy");
+
 
                 output_dim_ = bShape1ToDim(output_npbst_.getTotalDim());
                 input_dim_ = bShape1ToDim(input_npbst_.getTotalDim());

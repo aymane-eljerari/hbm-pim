@@ -481,7 +481,7 @@ struct NumpyBurstType
         loadTobShape((double)4);
         for (int i = 0; i < u64Data.size(); i += 4)
         {
-            BurstType burst((u16Data[i]), (u16Data[i + 1]), (u16Data[i + 2]), (u16Data[i + 3]));
+            BurstType burst((u64Data[i]), (u64Data[i + 1]), (u64Data[i + 2]), (u64Data[i + 3]));
             bData.push_back(burst);
         }
     }
