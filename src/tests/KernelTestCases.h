@@ -159,6 +159,26 @@ class PIMKernelFixture : public testing::Test
                                  0);
                 break;
             }
+
+
+            case KernelType::KSKIP:
+            {
+                // TODO: kernel->preloadNoReplacement arguments are
+                /*
+                    1. input operand
+                    2. starting row
+                    3. starting column
+
+                    We need to call this function to load the data into the PIM banks
+                    (think about how the data is laid out)
+                */
+
+                // TODO: implement the newly created function called kernel->executeKSKIP() 
+            
+                // TODO: init result = new BurstType[dim_data->output_dim];
+
+                break;
+            }
             case KernelType::GEMVTREE:
             default:
             {

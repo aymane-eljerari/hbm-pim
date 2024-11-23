@@ -321,6 +321,36 @@ class DataDim
     int batch_size_;
     bool used_data_;
 
+
+    // ($add) support for a third input for KSKIP (vector C) 
+    int input3_dim_;
+    NumpyBurstType input3_npbst_;
+
+    // Overload the DataDim constructor for KSKIP kernel
+    DataDim(KernelType kn_type, uint64_t batch_size, uint64_t output_dim, uint64_t input_dim,
+            uint64_t vec_dim, bool used_data) 
+    {
+        batch_size  = batch_size;
+        output_dim  = output_dim;
+        input_dim_  = input_dim;
+        // ! current implementation assumes data is all stored inside the same variable.
+        // might be easier to have 3 variables (A, B and C)
+        used_data_  = used_data;
+        input3_dim_ = vec_dim;
+
+        input1_dim_ = input3_dim_;
+
+        // TODO implment the data loading inside loadData or loadDummydata (whichever is easier)
+        if (used_data_){
+            loadData(kn_type);
+        }
+        else{
+            loadDummyData(kn_type);
+        }
+
+
+    }
+
     DataDim(KernelType kn_type, uint32_t batch_size, uint32_t output_dim, uint32_t input_dim,
             bool used_data)
     {

@@ -524,6 +524,22 @@ void PIMKernel::executeEltwise(int dim, pimBankType pb_type, KernelType ktype, i
     parkOut();
 }
 
+
+void PIMKernel::executeKSKIP(int dim, pimBankType pb_type, KernelType ktype, int input0_row,
+                             int input1_row, int input3_row, int result_row){
+
+    // TODO: use executeEltwise() function above as a template to perform the following
+
+    /* 
+        1. compute the num_jumps_to_be_taken (I'm assuming this is the stride for data layout)
+        2. Program the PIM device (how to program the 3 nested for loops? and compute (a * b) % c)
+        3. Actually perform the computation
+
+    */
+
+
+}
+
 void PIMKernel::computeAddOrMul(int num_tile, int input0_row, int result_row, int input1_row)
 {
     for (int i = 0; i < num_tile; i++)

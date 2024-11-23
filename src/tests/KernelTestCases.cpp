@@ -144,3 +144,34 @@ TEST_F(PIMKernelFixture, relu)
     delete[] result_;
     delete dim_data;
 }
+
+TEST_F(PIMKernelFixture, kskip){
+    shared_ptr<PIMKernel> kernel = make_pim_kernel();
+    int batch_size = 1;
+    // input: 3 dnum * 23 limbs * 2^16 polynomial degree
+    uint64_t input_dim = 3 * 23 * 65536;
+
+    uint64_t input_dim_vec = 23;
+    // output: 23 * 2^16
+    uint64_t output_dim = 23 * 65536;
+
+    DataDim *dim_data = new DataDim(KernelType::KSKIP, batch_size, output_dim, input_dim, input_dim_vec, true);
+    // TODO: add support for printing the dimensions of the KSKIP dat
+    dim_data->printDim(KernelType::KSKIP);
+
+    // ? the "result_" variable is not initialized within this scope, where is it being initialized?
+    /*
+        this simulator evaluates performance based on the number of memory transactions issued.
+        so how is the result_ variable being populated? we need to actually compute (a * b) % c
+
+        How and where do we do that? This is an important question to ask.
+    */
+    // ! this is where most of the work must be done
+    result_ = getResultPIM(KernelType::KSKIP, dim_data, kernel, result_);
+    // compute the cycle count
+    kernel->runPIM();
+
+    // clear stats
+    testStatsClear();
+    // Check correctness by calling expectAccuracy()
+}

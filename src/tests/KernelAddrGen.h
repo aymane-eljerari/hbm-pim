@@ -90,6 +90,7 @@ enum class KernelType
     RELU,
     GEMV,
     MUL,
-    GEMVTREE
+    GEMVTREE,
+    KSKIP
 };
 #endif
