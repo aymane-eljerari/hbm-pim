@@ -12,6 +12,7 @@
 
 #include "tests/PIMKernel.h"
 
+#include <cassert> // Should remove this later
 #include <iomanip>
 #include <string>
 
@@ -537,12 +538,40 @@ void PIMKernel::executeKSKIP(int dim, pimBankType pb_type, KernelType ktype, int
         3. Actually perform the computation
     */
 
+    // Is this value what we want here? 
+    // setup
+    int num_tile = dim / (num_banks_ * num_pim_chans_ * num_pim_ranks_ * num_grf_);
+    int num_jump_to_be_taken = num_tile - 1;
+    vector<PIMCmd> pim_cmds = PIMCmdGen::getPIMCmds(ktype, num_jump_to_be_taken, 0, 0);
+
+    setControl(&bst_hab_pim_, true, getToggleCond(pb_type), false, false);
+    setControl(&bst_hab_, false, getToggleCond(pb_type), false, false);
+
+    parkIn();
+    changePIMMode(dramMode::SB, dramMode::HAB);
+    programCrf(pim_cmds);
+    changePIMMode(dramMode::HAB, dramMode::HAB_PIM);
+
+    // Adding this assert to make sure we use this right
+    assert(ktype == KernelType::KSKIP);
+    computeKSK(num_tile, input0_row, input1_row, input3_row, result_row);
+
+    // teardown
+    changePIMMode(dramMode::HAB_PIM, dramMode::HAB);
+    changePIMMode(dramMode::HAB, dramMode::SB);
+    parkOut();
 
 }
 
 void PIMKernel::computeKSK(int num_tile, int input0_row,
                              int input1_row, int input3_row, int result_row) {
+    // for limb in limbs
+        // for coeff in coefficients
+            // for k = 0 to dnum - 1
+                // result[i][j] += (a[k][i][j] * b[k][i][j] % c[i])
+    
     ERROR("Compute KSK not implemented yet");
+
     return;
 }
 

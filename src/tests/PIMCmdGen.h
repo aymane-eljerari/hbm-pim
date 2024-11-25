@@ -168,6 +168,9 @@ class KSKIPKernel : public IPIMCmd
     {
         vector<PIMCmd> pim_cmds;
         assert(kernelType == KernelType::KSKIP);
+        // TODO: outline instructions for KSKIP kernel
+        // Here is where the actual instruction stream comes from
+
         if (num_jump_to_be_taken != 0)
         {
             pim_cmds.push_back(PIMCmd(PIMCmdType::JUMP, num_jump_to_be_taken, pim_cmds.size() + 1));
