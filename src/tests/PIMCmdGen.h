@@ -14,6 +14,7 @@
 #define __PIM_KERNEL_GEN_H__
 
 #include <vector>
+#include <cassert> // let's cut this out later
 
 #include "MultiChannelMemorySystem.h"
 #include "PIMCmd.h"
@@ -148,6 +149,25 @@ class GemvPIMKernel : public IPIMCmd
         {
             throw invalid_argument("Not supported gemv operation");
         }
+        if (num_jump_to_be_taken != 0)
+        {
+            pim_cmds.push_back(PIMCmd(PIMCmdType::JUMP, num_jump_to_be_taken, pim_cmds.size() + 1));
+        }
+        pim_cmds.push_back(PIMCmd(PIMCmdType::EXIT, 0));
+        return pim_cmds;
+    }
+};
+
+class KSKIPKernel : public IPIMCmd
+{
+  public:
+    KSKIPKernel(KernelType ktype) : IPIMCmd(ktype) {}
+    virtual vector<PIMCmd> generateKernel(int num_jump_to_be_taken,
+                                          int num_jump_to_be_taken_odd_bank,
+                                          int num_jump_to_be_taken_even_bank) override
+    {
+        vector<PIMCmd> pim_cmds;
+        assert(kernelType == KernelType::KSKIP);
         if (num_jump_to_be_taken != 0)
         {
             pim_cmds.push_back(PIMCmd(PIMCmdType::JUMP, num_jump_to_be_taken, pim_cmds.size() + 1));

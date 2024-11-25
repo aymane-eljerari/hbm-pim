@@ -230,6 +230,12 @@ class DataDim
 
                 return;
             }
+            case KernelType::KSKIP:
+            {
+                ERROR("== Error - KSKIP KernelType not supported yet");
+                exit(2);
+                return;
+            }
             default:
             {
                 ERROR("== Error - Unknown KernelType trying to load data");

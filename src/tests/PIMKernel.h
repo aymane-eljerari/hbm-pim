@@ -103,6 +103,7 @@ class PIMKernel
                      int output_tile, int batch_idx, pimBankType bank_types);
     void computeAddOrMul(int numTile, int input0Row, int resultRow, int input1Row);
     void computeRelu(int numTile, int input0Row, int resultRow);
+    void computeKSK(int num_tile, int input0_row, int input1_row, int input3_row, int result_row);
     // void computeBn(int numTile, int input0Row, int resultRow);
 
     void readResult(BurstType* resultBst, pimBankType bank_types, int output_dim,

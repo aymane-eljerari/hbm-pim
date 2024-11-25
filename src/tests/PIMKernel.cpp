@@ -97,6 +97,7 @@ void PIMKernel::addTransactionAll(bool is_write, int bg_idx, int bank_idx, int r
             {
                 uint64_t addr = pim_addr_mgr_->addrGenSafe(ch_idx, ra_idx, bg_idx, bank_idx,
                                                            local_row, local_col);
+                // does this tag actually mean anything? I think no
                 (tag != "") ? mem_->addTransaction(is_write, addr, tag, bst)
                             : mem_->addTransaction(is_write, addr, bst);
                 local_col++;
@@ -534,10 +535,15 @@ void PIMKernel::executeKSKIP(int dim, pimBankType pb_type, KernelType ktype, int
         1. compute the num_jumps_to_be_taken (I'm assuming this is the stride for data layout)
         2. Program the PIM device (how to program the 3 nested for loops? and compute (a * b) % c)
         3. Actually perform the computation
-
     */
 
 
+}
+
+void PIMKernel::computeKSK(int num_tile, int input0_row,
+                             int input1_row, int input3_row, int result_row) {
+    ERROR("Compute KSK not implemented yet");
+    return;
 }
 
 void PIMKernel::computeAddOrMul(int num_tile, int input0_row, int result_row, int input1_row)
@@ -554,6 +560,8 @@ void PIMKernel::computeAddOrMul(int num_tile, int input0_row, int result_row, in
         }
     }
 }
+
+
 
 /*
 void PIMKernel::computeBn(int num_tile, int input0_row, int result_row)
