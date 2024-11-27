@@ -163,15 +163,36 @@ class PIMKernelFixture : public testing::Test
 
             case KernelType::KSKIP:
             {
-                // TODO: kernel->preloadNoReplacement arguments are
+                int input_row = 0;
+                // 16,384 elements per dnum, and 3 dnum. So input for B is offset by 3*128*128
+                int input_row1 = 3 * 128 * 128;
+                // storing the single element from C
+                int input_row2 = 2*(input_row)+1;
+                // Arbiraty row to store the result
+                int result_row = 100000;
+
                 /*
+                    kernel->preloadNoReplacement arguments are
                     1. input operand
                     2. starting row
                     3. starting column
+                */ 
 
-                    We need to call this function to load the data into the PIM banks
-                    (think about how the data is laid out)
-                */
+                // Load A starting from row 0 and column 0
+                kernel->preloadNoReplacement(&dim_data->input_npbst_, input_row, 0);
+                // Load B starting fro row 49,152 and column 0;
+                kernel->preloadNoReplacement(&dim_data->input1_npbst_, input_row1, 0);
+                // Load single 64 bit element from C
+                kernel->preloadNoReplacement(&dim_data->input2_npbst_, input_row2, 0);
+
+                kernel->executeKSKIP(dim_data->dimTobShape(dim_data->output_dim_), 
+                                    pimBankType::ALL_BANK, kn_type, input_row, input_row1, input_row2,
+                                    result_row);
+
+                result = new BurstType[dim_data->output_dim_];
+                kernel->readData(result, dim_data->dimTobShape(dim_data->output_dim_), result_row, 0);
+                
+
 
                 // TODO: implement the newly created function called kernel->executeKSKIP() 
             

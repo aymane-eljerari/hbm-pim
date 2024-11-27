@@ -148,12 +148,10 @@ TEST_F(PIMKernelFixture, relu)
 TEST_F(PIMKernelFixture, kskip){
     shared_ptr<PIMKernel> kernel = make_pim_kernel();
     int batch_size = 1;
-    // input: 3 dnum * 23 limbs * 2^16 polynomial degree
-    uint64_t input_dim = 3 * 23 * 65536;
-
-    uint64_t input_dim_vec = 23;
-    // output: 23 * 2^16
-    uint64_t output_dim = 23 * 65536;
+    // input: 3 dnum * 32 limbs * 2^16 polynomial degree
+    uint64_t input_dim = 3 * 32 * 65536;
+    uint64_t input_dim_vec = 32;
+    uint64_t output_dim = 32 * 65536;
 
     DataDim *dim_data = new DataDim(KernelType::KSKIP, batch_size, output_dim, input_dim, input_dim_vec, true);
     // TODO: add support for printing the dimensions of the KSKIP dat

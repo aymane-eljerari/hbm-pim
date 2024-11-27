@@ -400,7 +400,8 @@ struct NumpyBurstType
     enum precision
     {
         FP32,
-        FP16
+        FP16,
+        INT64
     };
 
     BurstType& getBurst(int x, int y)

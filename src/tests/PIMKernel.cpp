@@ -330,7 +330,9 @@ void PIMKernel::preloadNoReplacement(NumpyBurstType* operand, unsigned starting_
 
     for (int x = 0; x < operand->getTotalDim(); x++)
     {
+        // transaction_size_ = 32 bytes or 256 bits (4x 64bit)
         uint64_t addr = init_addr + x * transaction_size_;
+        // ! make sure the correct data is being loaded is inside &operand->bData[x]
         mem_->addTransaction(true, addr, &operand->bData[x]);
     }
 }
