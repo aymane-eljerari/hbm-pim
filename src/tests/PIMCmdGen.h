@@ -168,13 +168,33 @@ class KSKIPKernel : public IPIMCmd
     {
         vector<PIMCmd> pim_cmds;
         assert(kernelType == KernelType::KSKIP);
-        // TODO: outline instructions for KSKIP kernel
-        // Here is where the actual instruction stream comes from
 
-        if (num_jump_to_be_taken != 0)
-        {
-            pim_cmds.push_back(PIMCmd(PIMCmdType::JUMP, num_jump_to_be_taken, pim_cmds.size() + 1));
-        }
+        vector<PIMCmd> tmp_cmds{
+            // Load 4x 64bit coefficients from A into GRF_A
+            PIMCmd(PIMCmdType::FILL, PIMOpdType::GRF_A, PIMOpdType::EVEN_BANK),
+            // Load 4x 64bit coefficients from B into GRF_A
+            PIMCmd(PIMCmdType::FILL, PIMOpdType::GRF_A, PIMOpdType::EVEN_BANK),
+            // Multiply the values elementwise and store output in GRF_A
+            PIMCmd(PIMCmdType::MUL, PIMOpdType::GRF_A, PIMOpdType::GRF_A, PIMOpdType::GRF_A),
+
+            // TODO add intruction to perform barett reduction 
+            // TODO after adding the instr, suport the conversion to machine 
+            // TODO code and generate X number transaction 
+            // ! number of cycles for the reduction = X?
+            // barett reduction, destination: GRF_A, input1: GRF_A, input2: SRF
+            PIMCmd(),
+
+            // Perform the accumulation into result inside the GRF 
+            PIMCmd(PIMCmdType::ADD, PIMOpdType::GRF_A, PIMOpdType::GRF_A, PIMOpdType::GRF_A),
+            // Redo 3 times (5 is the loop offset)
+            PIMCmd(PIMCmdType::JUMP, 3, 5),
+            
+            // 2^14 coefficients / 4 ALUs per op = 4096 jumps
+            // Redo 4096 times (6 is the loop offset)
+            PIMCmd(PIMCmdType::JUMP, 4096, 6)
+        };
+
+        pim_cmds.assign(tmp_cmds.begin(), tmp_cmds.end());
         pim_cmds.push_back(PIMCmd(PIMCmdType::EXIT, 0));
         return pim_cmds;
     }
