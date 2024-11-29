@@ -220,6 +220,7 @@ void PIMKernel::programSrf()
 
 void PIMKernel::programCrf(vector<PIMCmd>& cmds)
 {
+    // Q: what does this actually do?
     PIMCmd nop_cmd(PIMCmdType::NOP, 0);
     for (int i = 0; i < 4; i++)
     {
@@ -544,6 +545,7 @@ void PIMKernel::executeKSKIP(int dim, pimBankType pb_type, KernelType ktype, int
     // setup
     int num_tile = dim / (num_banks_ * num_pim_chans_ * num_pim_ranks_ * num_grf_);
     int num_jump_to_be_taken = num_tile - 1;
+    // this is the set of commands that are to be used in the PIM
     vector<PIMCmd> pim_cmds = PIMCmdGen::getPIMCmds(ktype, num_jump_to_be_taken, 0, 0);
 
     setControl(&bst_hab_pim_, true, getToggleCond(pb_type), false, false);
@@ -551,7 +553,8 @@ void PIMKernel::executeKSKIP(int dim, pimBankType pb_type, KernelType ktype, int
 
     parkIn();
     changePIMMode(dramMode::SB, dramMode::HAB);
-    programCrf(pim_cmds);
+
+    programCrf(pim_cmds); 
     changePIMMode(dramMode::HAB, dramMode::HAB_PIM);
 
     // Adding this assert to make sure we use this right
@@ -572,6 +575,8 @@ void PIMKernel::computeKSK(int num_tile, int input0_row,
             // for k = 0 to dnum - 1
                 // result[i][j] += (a[k][i][j] * b[k][i][j] % c[i])
     
+    // Q: How do we iterate through the commands in the PIM here? Do we even need this?
+
     ERROR("Compute KSK not implemented yet");
 
     return;
