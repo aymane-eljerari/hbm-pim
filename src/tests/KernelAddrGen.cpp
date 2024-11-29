@@ -65,7 +65,7 @@ uint64_t PIMAddrManager::addrGenSafe(unsigned chan, unsigned rank, unsigned bank
 
     if (row >= num_rows_)
     {
-        cerr << "row overflow" << endl;
+        cerr << num_rows_ << " row overflow" << endl;
     }
     return addrGen(chan, rank, bankgroup, bank, row, col);
 }

@@ -179,16 +179,23 @@ class PIMKernelFixture : public testing::Test
                 */ 
 
                 // Load A starting from row 0 and column 0
+                std::cerr << "Loading A" << std::endl;
                 kernel->preloadNoReplacement(&dim_data->input_npbst_, input_row, 0);
                 // Load B starting fro row 49,152 and column 0;
+                std::cerr << "Loading B" << std::endl;
                 kernel->preloadNoReplacement(&dim_data->input1_npbst_, input_row1, 0);
                 // Load single 64 bit element from C
+                std::cerr << "Loading C" << std::endl;
                 kernel->preloadNoReplacement(&dim_data->input2_npbst_, input_row2, 0);
 
+                // Execute the KSKIP kernel
+                std::cerr << "Executing KSKIP" << std::endl;
                 kernel->executeKSKIP(dim_data->dimTobShape(dim_data->output_dim_), 
                                     pimBankType::ALL_BANK, kn_type, input_row, input_row1, input_row2,
                                     result_row);
 
+                // Read the result from the PIM
+                std::cerr << "Reading Result" << std::endl;
                 result = new BurstType[dim_data->output_dim_];
                 kernel->readData(result, dim_data->dimTobShape(dim_data->output_dim_), result_row, 0);
                 

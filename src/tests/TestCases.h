@@ -232,8 +232,18 @@ class DataDim
             }
             case KernelType::KSKIP:
             {
-                ERROR("== Error - KSKIP KernelType not supported yet");
-                exit(2);
+                input_npbst_.loadint64("data/ksk/ksk_inputA_u64.npy");
+                input1_npbst_.loadint64("data/ksk/ksk_inputB_u64.npy");
+                input2_npbst_.loadint64("data/ksk/ksk_inputC_u64.npy");
+                output_npbst_.loadint64("data/ksk/ksk_output_u64.npy");
+
+                input_dim_ = bShape1ToDim(input_npbst_.getTotalDim());
+                input1_dim_ = bShape1ToDim(input1_npbst_.getTotalDim());
+                input2_dim_ = bShape1ToDim(input2_npbst_.getTotalDim());
+                output_dim_ = bShape1ToDim(output_npbst_.getTotalDim());
+
+                // ERROR("== Error - KSKIP KernelType not supported yet");
+                // exit(2);
                 return;
             }
             default:
@@ -415,6 +425,14 @@ class DataDim
             case KernelType::RELU:
             {
                 cout << "  Input/output data dimension : " << output_dim_ << endl;
+                break;
+            }
+            case KernelType::KSKIP:
+            {
+                cout << "  InputA data dimension : " << input_dim_ << endl;
+                cout << "  InputB data dimension : " << input1_dim_ << endl;
+                cout << "  InputC data dimension : " << input2_dim_ << endl;
+                cout << "  Output data dimension : " << output_dim_ << endl;
                 break;
             }
             default:
