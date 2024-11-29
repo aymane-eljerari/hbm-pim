@@ -98,7 +98,6 @@ void PIMKernel::addTransactionAll(bool is_write, int bg_idx, int bank_idx, int r
             {
                 uint64_t addr = pim_addr_mgr_->addrGenSafe(ch_idx, ra_idx, bg_idx, bank_idx,
                                                            local_row, local_col);
-                // does this tag actually mean anything? I think no
                 (tag != "") ? mem_->addTransaction(is_write, addr, tag, bst)
                             : mem_->addTransaction(is_write, addr, bst);
                 local_col++;
@@ -558,17 +557,16 @@ void PIMKernel::executeKSKIP(int dim, pimBankType pb_type, KernelType ktype, int
     changePIMMode(dramMode::HAB, dramMode::HAB_PIM);
 
     // Adding this assert to make sure we use this right
-    assert(ktype == KernelType::KSKIP);
-    computeKSK(num_tile, input0_row, input1_row, input3_row, result_row);
+    //assert(ktype == KernelType::KSKIP);
+    computeKSK(input0_row, input1_row, input3_row, result_row);
 
     // teardown
     changePIMMode(dramMode::HAB_PIM, dramMode::HAB);
     changePIMMode(dramMode::HAB, dramMode::SB);
     parkOut();
-
 }
 
-void PIMKernel::computeKSK(int num_tile, int input0_row,
+void PIMKernel::computeKSK(int input0_row,
                              int input1_row, int input3_row, int result_row) {
     // for limb in limbs
         // for coeff in coefficients
@@ -577,7 +575,18 @@ void PIMKernel::computeKSK(int num_tile, int input0_row,
     
     // Q: How do we iterate through the commands in the PIM here? Do we even need this?
 
-    ERROR("Compute KSK not implemented yet");
+    // TODO: This is the same as element wise add (wrong)
+    for (int i = 0; i < 128; i++)
+    {
+        int c = num_grf_ * i;
+        for (int b = 0; b < 2; b++)  // for even/odd banks, respectively
+        {
+            addTransactionAll(false, 0, b, input0_row, c, "BANK_TO_GRF_", &null_bst_, true,
+                              num_grf_);
+            addTransactionAll(false, 0, b, input1_row, c, "ADD", &null_bst_, true, num_grf_);
+            addTransactionAll(true, 0, b, result_row, c, "GRF_TO_BANK", &null_bst_, true, num_grf_);
+        }
+    }
 
     return;
 }

@@ -176,4 +176,7 @@ TEST_F(PIMKernelFixture, kskip){
     // clear stats
     testStatsClear();
     // Check correctness by calling expectAccuracy()
+    expectAccuracy(KernelType::KSKIP, dim_data->dimTobShape(output_dim), dim_data->output_npbst_);
+    delete[] result_;
+    delete dim_data;
 }

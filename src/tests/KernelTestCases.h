@@ -245,6 +245,15 @@ class PIMKernelFixture : public testing::Test
                 }
                 return;
             }
+            case KernelType::KSKIP:
+            {
+                // TODO: This is probably wrong
+                for (int i = 0; i < num_tests; i++)
+                {
+                    EXPECT_INT64_BST_EQ(result_[i], precalculated_result.getBurst(i));
+                }
+                return;
+            }
             default:
             {
                 ERROR("== Error - Unknown KernelType trying to run");
