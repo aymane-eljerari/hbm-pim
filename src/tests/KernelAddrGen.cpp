@@ -30,21 +30,30 @@ uint64_t PIMAddrManager::addrGen(unsigned chan, unsigned rank, unsigned bankgrou
     {
         addr = rank;
 
+        // 16,384 rows = 14 bits
         addr <<= num_row_bits_;
         addr |= row;
 
+        // 128 cols / 4 = 5 bits
         addr <<= num_col_bits_;
         addr |= col;
 
+        // 4 bgs = 2 bits
         addr <<= num_bankgroup_bits_;
         addr |= bankgroup;
 
+        // 4 banks = 2 bits
         addr <<= num_bank_bits_;
         addr |= bank;
 
+        // 16 channels = 4 bits
         addr <<= num_chan_bits_;
         addr |= chan;
 
+        // 32 bytes = 5 bits 
+        // 2 MSBs are part of the column 
+        // 7 column bits for 128 columns
+        // remaining 3 bits are the byte index
         addr <<= num_offset_bits_;
     }
     else
@@ -53,6 +62,7 @@ uint64_t PIMAddrManager::addrGen(unsigned chan, unsigned rank, unsigned bankgrou
     }
     return addr;
 }
+
 
 uint64_t PIMAddrManager::addrGenSafe(unsigned chan, unsigned rank, unsigned bankgroup,
                                      unsigned bank, unsigned& row, unsigned& col)
