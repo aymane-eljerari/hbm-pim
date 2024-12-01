@@ -336,7 +336,7 @@ void PIMKernel::preloadNoReplacement(NumpyBurstType* operand, unsigned starting_
 }
 
 void PIMKernel::loadKSKIPdata(NumpyBurstType* operand, unsigned starting_row, 
-                                unsigned starting_col)
+                                unsigned starting_col, bool is_c)
 {
     // uint64_t init_addr = pim_addr_mgr_->addrGenSafe(0, 0, 0, 0, starting_row, starting_col);
     uint64_t addr;
@@ -345,32 +345,44 @@ void PIMKernel::loadKSKIPdata(NumpyBurstType* operand, unsigned starting_row,
     int col = starting_col;
 
     int idx;
+    
+    if (is_c){
+        for (int channel = 0; channel < 16; channel++){
+            for (int bg = 0; bg < 4; bg++){
+                for(int bank = 0; bank < 4; bank+=2){
+                   addr = pim_addr_mgr_->addrGenSafe(channel, 0, bg, bank, (unsigned int&)row, (unsigned int&)col);
+                   mem_->addTransaction(true, addr, &operand->bData[idx]);
+                }
+            }
+            idx++;
+        }
+    }
+    else {
+        for (int channel = 0; channel < 16; channel++){
+            for (int bg = 0; bg < 4; bg++){
+                for(int bank = 0; bank < 4; bank+=2){
+                    for (int dnum = 0; dnum < 3; dnum++){
+                        row += 128;
+                        for(int r = row; r < 128; r++){
+                            for (int c = col; c < 128; c+=4){
+                                // std::cout << "Channel: " << channel
+                                //         << " - Bank Group: " << bg
+                                //         << " - Bank: " << bank
+                                //         << " - Dnum: " << dnum
+                                //         << " - Row: " << r
+                                //         << " - Col: " << col
+                                //         << '\n';                           
+                                addr = pim_addr_mgr_->addrGenSafe(channel, 0, bg, bank, (unsigned int&)r, (unsigned int&)c);
+                                idx = dnum * r * (c/4);
+                                mem_->addTransaction(true, addr, &operand->bData[idx]);
 
-    for (int channel = 0; channel < 16; channel++){
-        for (int bg = 0; bg < 4; bg++){
-            for(int bank = 0; bank < 4; bank+=2){
-                for (int dnum = 0; dnum < 3; dnum++){
-                    row += 128;
-                    for(int r = row; r < 128; r++){
-                        for (int c = col; c < 128; c+=4){
-                            // std::cout << "Channel: " << channel
-                            //         << " - Bank Group: " << bg
-                            //         << " - Bank: " << bank
-                            //         << " - Dnum: " << dnum
-                            //         << " - Row: " << r
-                            //         << " - Col: " << col
-                            //         << '\n';                           
-                            addr = pim_addr_mgr_->addrGenSafe(channel, 0, bg, bank, (unsigned int&)r, (unsigned int&)c);
-                            idx = dnum * r * (c/4);
-                            mem_->addTransaction(true, addr, &operand->bData[idx]);
-
+                            }
                         }
                     }
                 }
             }
         }
-    }
-
+    }   
 
 }
 /*
@@ -567,7 +579,7 @@ void PIMKernel::executeEltwise(int dim, pimBankType pb_type, KernelType ktype, i
 
 
 void PIMKernel::executeKSKIP(int dim, pimBankType pb_type, KernelType ktype, int input0_row,
-                             int input1_row, int input3_row, int result_row){
+                             int input1_row, int input2_row, int result_row){
 
     // TODO: use executeEltwise() function above as a template to perform the following
 
@@ -595,7 +607,7 @@ void PIMKernel::executeKSKIP(int dim, pimBankType pb_type, KernelType ktype, int
 
     // Adding this assert to make sure we use this right
     //assert(ktype == KernelType::KSKIP);
-    computeKSK(input0_row, input1_row, input3_row, result_row);
+    computeKSK(input0_row, input1_row, input2_row, result_row);
 
     // teardown
     changePIMMode(dramMode::HAB_PIM, dramMode::HAB);

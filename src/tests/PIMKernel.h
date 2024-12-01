@@ -90,7 +90,7 @@ class PIMKernel
     void preloadGemv(NumpyBurstType* operand, unsigned starting_row = 0, unsigned starting_col = 0);
     void preloadNoReplacement(NumpyBurstType* operand, unsigned startingRow, unsigned startingCol);
     void loadKSKIPdata(NumpyBurstType* operand, unsigned starting_row, 
-                                unsigned starting_col);
+                                unsigned starting_col, bool is_c);
     /*
     void preloadEltwise(NumpyBurstType* operand, pimBankType bank_types, unsigned startingRow,
                         unsigned startingCol);
