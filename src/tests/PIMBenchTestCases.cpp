@@ -52,3 +52,10 @@ TEST_F(PIMBenchFixture, relu)
     executePIMKernel();
     expectPIMBench(2.0);
 }
+
+TEST_F(PIMBenchFixture, kskip)
+{
+    setPIMBenchTestCase(KernelType::KSKIP, NULL, NULL);
+    executeKernel();
+    executePIMKernel();
+}

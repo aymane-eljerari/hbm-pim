@@ -180,13 +180,13 @@ class PIMKernelFixture : public testing::Test
 
                 // Load A starting from row 0 and column 0
                 std::cerr << "Loading A" << std::endl;
-                kernel->loadKSKIPdata(&dim_data->input_npbst_, input_row, 0);
+                kernel->loadKSKIPdata(&dim_data->input_npbst_, input_row, 0, false);
                 // Load B starting fro row 49,152 and column 0;
                 std::cerr << "Loading B" << std::endl;
-                kernel->loadKSKIPdata(&dim_data->input1_npbst_, input_row1, 0);
+                kernel->loadKSKIPdata(&dim_data->input1_npbst_, input_row1, 0, false);
                 // Load single 64 bit element from C
                 std::cerr << "Loading C" << std::endl;
-                kernel->loadKSKIPdata(&dim_data->input2_npbst_, input_row2, 0);
+                kernel->loadKSKIPdata(&dim_data->input2_npbst_, input_row2, 0, true);
 
                 // Execute the KSKIP kernel
                 std::cerr << "Executing KSKIP" << std::endl;

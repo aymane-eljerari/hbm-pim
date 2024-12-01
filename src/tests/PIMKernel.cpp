@@ -615,8 +615,9 @@ void PIMKernel::executeKSKIP(int dim, pimBankType pb_type, KernelType ktype, int
     parkOut();
 }
 
+// ! TODO: Investigate
 void PIMKernel::computeKSK(int input0_row,
-                             int input1_row, int input3_row, int result_row) {
+                             int input1_row, int input2_row, int result_row) {
     // for limb in limbs
         // for coeff in coefficients
             // for k = 0 to dnum - 1
@@ -628,13 +629,14 @@ void PIMKernel::computeKSK(int input0_row,
     for (int i = 0; i < 128; i++)
     {
         int c = num_grf_ * i;
-        for (int b = 0; b < 2; b++)  // for even/odd banks, respectively
-        {
-            addTransactionAll(false, 0, b, input0_row, c, "BANK_TO_GRF_", &null_bst_, true,
-                              num_grf_);
-            addTransactionAll(false, 0, b, input1_row, c, "ADD", &null_bst_, true, num_grf_);
-            addTransactionAll(true, 0, b, result_row, c, "GRF_TO_BANK", &null_bst_, true, num_grf_);
-        }
+        // only for even banks
+        int b = 0;
+        addTransactionAll(false, 0, b, input0_row, c, "BANK_TO_GRF_", &null_bst_, true,
+                            num_grf_);
+        addTransactionAll(false, 0, b, input1_row, c, "MUL", &null_bst_, true, num_grf_);
+        addTransactionAll(false, 0, b, input2_row, c, "MOD", &null_bst_, true, num_grf_);
+        addTransactionAll(false, 0, b, NULL, c, "ADD", &null_bst_, true, num_grf_);
+        addTransactionAll(true, 0, b, result_row, c, "GRF_TO_BANK", &null_bst_, true, num_grf_);
     }
 
     return;

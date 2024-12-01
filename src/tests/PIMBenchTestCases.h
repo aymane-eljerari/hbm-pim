@@ -38,7 +38,13 @@ class PIMBenchTestCase
         //                                                  256 * 64 * 2);
         // # of pim channel = 64, # of pim rank = 1
         kernel_ = make_shared<PIMKernel>(pim_mem_, 64, 1);
-        dim_data_ = new DataDim(kernel_type_, batch_, out_, in_, false);
+
+        // ! hardcoded dim_data_ for KSKIP kernel. Uncomment the line below to go back to default behavior
+        // dim_data_ = new DataDim(kernel_type_, batch_, out_, in_, false);
+        uint64_t input_dim = 3 * 32 * 65536;
+        uint64_t input_dim_vec = 32 * 8;
+        uint64_t output_dim = 32 * 65536;
+        dim_data_ = new DataDim(KernelType::KSKIP, 1, output_dim, input_dim, input_dim_vec, true);
     }
 
     virtual ~PIMBenchTestCase()
@@ -91,6 +97,10 @@ class PIMBenchTestCase
         else if (k == KernelType::RELU)
         {
             return string{"RELU"};
+        }
+        else if (k == KernelType::KSKIP)
+        {
+            return string{"KSKIP"};
         }
         else
         {
@@ -243,6 +253,59 @@ class ActPIMBenchTest : public PIMBenchTestCase
     unsigned result_row_;
 };
 
+class KSKPIMBenchTest : public PIMBenchTestCase
+{
+  public:
+    KSKPIMBenchTest(KernelType k, unsigned b, unsigned out, unsigned in)
+        : PIMBenchTestCase(k, b, out, in)
+    {
+        input_row0_ = 0;
+        input_row1_ = 1024;
+        input_row2_ = 2048;
+        result_row_ = 2049;
+    }
+
+    uint64_t measureCycle(bool is_pim_ = false)
+    {
+        uint64_t cycle = 0;
+        uint64_t starting_addr = 0;
+
+        if (is_pim_ == true)
+        {
+            kernel_->executeKSKIP(dim_data_->output_npbst_.getTotalDim(), pimBankType::ALL_BANK,
+                                    kernel_type_, input_row0_, input_row1_, input_row2_, result_row_);
+            kernel_->runPIM();
+            cycle = kernel_->getCycle();
+        }
+        else
+        {
+            uint32_t input_data_size_in_byte =
+                dim_data_->getDataSize(dim_data_->input_dim_, dim_data_->batch_size_);
+            uint32_t input1_data_size_in_byte =
+                dim_data_->getDataSize(dim_data_->input1_dim_, dim_data_->batch_size_);
+            uint32_t input2_data_size_in_byte =
+                dim_data_->getDataSize(dim_data_->input2_dim_, dim_data_->batch_size_);
+            uint32_t output_data_size_in_byte =
+                dim_data_->getDataSize(dim_data_->output_dim_, dim_data_->batch_size_);
+            starting_addr = genMemTraffic(mem_, false, input_data_size_in_byte, starting_addr);
+            starting_addr = genMemTraffic(mem_, false, input1_data_size_in_byte, starting_addr);
+            starting_addr = genMemTraffic(mem_, false, input2_data_size_in_byte, starting_addr);
+            run(mem_, &cycle);
+            genMemTraffic(mem_, true, output_data_size_in_byte, starting_addr);  // result-vec
+            run(mem_, &cycle);
+        }
+        return cycle;
+    }
+
+  private:
+    // for PIM
+    unsigned input_row0_;
+    unsigned input_row1_;
+    unsigned input_row2_;
+    unsigned result_row_;
+};
+
+
 class PIMBenchFixture : public testing::Test
 {
   public:
@@ -273,6 +336,10 @@ class PIMBenchFixture : public testing::Test
         else if (k == KernelType::RELU)
         {
             perfTest = new ActPIMBenchTest(k, batch, out, in);
+        }
+        else if (k == KernelType::KSKIP)
+        {
+            perfTest = new KSKPIMBenchTest(k, batch, out, in);
         }
         else
         {
