@@ -40,6 +40,7 @@ class PIMKernel
           srf_bst_(NULL),
           cycle_(0)
     {
+        // 4 * (64 / 8) = 32 byes
         transaction_size_ = getConfigParam(UINT, "BL") *
                             (getConfigParam(UINT, "JEDEC_DATA_BUS_BITS") / 8);  // in byte
 
@@ -88,6 +89,8 @@ class PIMKernel
                     unsigned& startingRow, unsigned& startingCol, unsigned& row, unsigned& col);
     void preloadGemv(NumpyBurstType* operand, unsigned starting_row = 0, unsigned starting_col = 0);
     void preloadNoReplacement(NumpyBurstType* operand, unsigned startingRow, unsigned startingCol);
+    void loadKSKIPdata(NumpyBurstType* operand, unsigned starting_row, 
+                                unsigned starting_col);
     /*
     void preloadEltwise(NumpyBurstType* operand, pimBankType bank_types, unsigned startingRow,
                         unsigned startingCol);
@@ -109,6 +112,8 @@ class PIMKernel
     void readResult(BurstType* resultBst, pimBankType bank_types, int output_dim,
                     uint64_t baseAddr = 0, unsigned startingRow = 0, unsigned startingCol = 0);
     void readData(BurstType* bst_data, size_t bst_cnt, unsigned s_row = 0, unsigned s_col = 0);
+    void readKSKIPdata(BurstType* bst_data, size_t bst_cnt, unsigned starting_row, 
+                                unsigned starting_col);
     void adderTree(BurstType* result, int output_dim, int numTile, int step, fp16* temp);
 
   private:

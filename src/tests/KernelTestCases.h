@@ -165,11 +165,11 @@ class PIMKernelFixture : public testing::Test
             {
                 int input_row = 0;
                 // 16,384 elements per dnum, and 3 dnum. So input for B is offset by 3*128*128
-                int input_row1 = 3 * 128 * 128;
+                int input_row1 = 1024;
                 // storing the single element from C
-                int input_row2 = 2*(input_row)+1;
+                int input_row2 = 2*(input_row);
                 // Arbiraty row to store the result
-                int result_row = 100000;
+                int result_row = 2049;
 
                 /*
                     kernel->preloadNoReplacement arguments are
@@ -180,13 +180,13 @@ class PIMKernelFixture : public testing::Test
 
                 // Load A starting from row 0 and column 0
                 std::cerr << "Loading A" << std::endl;
-                kernel->preloadNoReplacement(&dim_data->input_npbst_, input_row, 0);
+                kernel->loadKSKIPdata(&dim_data->input_npbst_, input_row, 0);
                 // Load B starting fro row 49,152 and column 0;
                 std::cerr << "Loading B" << std::endl;
-                kernel->preloadNoReplacement(&dim_data->input1_npbst_, input_row1, 0);
+                kernel->loadKSKIPdata(&dim_data->input1_npbst_, input_row1, 0);
                 // Load single 64 bit element from C
                 std::cerr << "Loading C" << std::endl;
-                kernel->preloadNoReplacement(&dim_data->input2_npbst_, input_row2, 0);
+                kernel->loadKSKIPdata(&dim_data->input2_npbst_, input_row2, 0);
 
                 // Execute the KSKIP kernel
                 std::cerr << "Executing KSKIP" << std::endl;
@@ -197,9 +197,7 @@ class PIMKernelFixture : public testing::Test
                 // Read the result from the PIM
                 std::cerr << "Reading Result" << std::endl;
                 result = new BurstType[dim_data->output_dim_];
-                kernel->readData(result, dim_data->dimTobShape(dim_data->output_dim_), result_row, 0);
-                
-
+                kernel->readKSKIPdata(result, dim_data->dimTobShape(dim_data->output_dim_), result_row, 0);
 
                 // TODO: implement the newly created function called kernel->executeKSKIP() 
             

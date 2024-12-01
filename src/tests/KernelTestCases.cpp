@@ -148,24 +148,29 @@ TEST_F(PIMKernelFixture, relu)
 TEST_F(PIMKernelFixture, kskip){
     shared_ptr<PIMKernel> kernel = make_pim_kernel();
     int batch_size = 1;
-    // input: 3 dnum * 32 limbs * 2^16 polynomial degree
+    // input: 3 dnum * 32 limbs * 2^16 polynomial degree * 8 bytes / 32 byte transaction size 
+
     uint64_t input_dim = 3 * 32 * 65536;
-    uint64_t input_dim_vec = 32;
+    uint64_t input_dim_vec = 32 * 8;
     uint64_t output_dim = 32 * 65536;
 
     std::cerr << "Creating DataDim" << std::endl;
     DataDim *dim_data = new DataDim(KernelType::KSKIP, batch_size, output_dim, input_dim, input_dim_vec, true);
-    // TODO: add support for printing the dimensions of the KSKIP dat
+    
+    // TODO: add support for printing the dimensions of the KSKIP data
+
     std::cerr << "Printing KSKIP dimensions" << std::endl;
     dim_data->printDim(KernelType::KSKIP);
 
     // ? the "result_" variable is not initialized within this scope, where is it being initialized?
+
     /*
         this simulator evaluates performance based on the number of memory transactions issued.
         so how is the result_ variable being populated? we need to actually compute (a * b) % c
 
         How and where do we do that? This is an important question to ask.
     */
+
     // ! this is where most of the work must be done
     std::cerr << "getResultPIM" << std::endl;
     result_ = getResultPIM(KernelType::KSKIP, dim_data, kernel, result_);

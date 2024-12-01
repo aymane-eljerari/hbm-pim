@@ -330,11 +330,48 @@ void PIMKernel::preloadNoReplacement(NumpyBurstType* operand, unsigned starting_
 
     for (int x = 0; x < operand->getTotalDim(); x++)
     {
-        // transaction_size_ = 32 bytes or 256 bits (4x 64bit)
         uint64_t addr = init_addr + x * transaction_size_;
-        // ! make sure the correct data is being loaded is inside &operand->bData[x]
         mem_->addTransaction(true, addr, &operand->bData[x]);
     }
+}
+
+void PIMKernel::loadKSKIPdata(NumpyBurstType* operand, unsigned starting_row, 
+                                unsigned starting_col)
+{
+    // uint64_t init_addr = pim_addr_mgr_->addrGenSafe(0, 0, 0, 0, starting_row, starting_col);
+    uint64_t addr;
+
+    int row = starting_row;
+    int col = starting_col;
+
+    int idx;
+
+    for (int channel = 0; channel < 16; channel++){
+        for (int bg = 0; bg < 4; bg++){
+            for(int bank = 0; bank < 4; bank+=2){
+                for (int dnum = 0; dnum < 3; dnum++){
+                    row += 128;
+                    for(int r = row; r < 128; r++){
+                        for (int c = col; c < 128; c+=4){
+                            // std::cout << "Channel: " << channel
+                            //         << " - Bank Group: " << bg
+                            //         << " - Bank: " << bank
+                            //         << " - Dnum: " << dnum
+                            //         << " - Row: " << r
+                            //         << " - Col: " << col
+                            //         << '\n';                           
+                            addr = pim_addr_mgr_->addrGenSafe(channel, 0, bg, bank, (unsigned int&)r, (unsigned int&)c);
+                            idx = dnum * r * (c/4);
+                            mem_->addTransaction(true, addr, &operand->bData[idx]);
+
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
 }
 /*
 void PIMKernel::preloadEltwise(NumpyBurstType* operand, pimBankType pb_type,
@@ -662,6 +699,39 @@ void PIMKernel::readData(BurstType* bst_data, size_t bst_cnt, unsigned starting_
     {
         mem_->addTransaction(false, addr, &bst_data[i]);
     }
+}
+
+
+void PIMKernel::readKSKIPdata(BurstType* bst_data, size_t bst_cnt, unsigned starting_row, 
+                                unsigned starting_col)
+{
+    // uint64_t init_addr = pim_addr_mgr_->addrGenSafe(0, 0, 0, 0, starting_row, starting_col);
+    uint64_t addr;
+
+    int row = starting_row;
+    int col = starting_col;
+
+    int idx;
+
+    for (int channel = 0; channel < 16; channel++){
+        for (int bg = 0; bg < 4; bg++){
+            for(int bank = 0; bank < 4; bank+=2){
+                for (int dnum = 0; dnum < 3; dnum++){
+                    row += 128;
+                    for(int r = row; r < 128; r++){
+                        for (int c = col; c < 128; c+=4){ 
+                            addr = pim_addr_mgr_->addrGenSafe(channel, 0, bg, bank, (unsigned int&)r, (unsigned int&)c);
+                            idx = dnum * r * (c/4);
+                            mem_->addTransaction(false, addr, &bst_data[idx]);
+
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
 }
 
 void PIMKernel::adderTree(BurstType* result, int output_dim, int num_tile, int step, fp16* temp)
