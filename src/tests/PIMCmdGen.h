@@ -167,7 +167,6 @@ class KSKIPKernel : public IPIMCmd
                                           int num_jump_to_be_taken_even_bank) override
     {
         vector<PIMCmd> pim_cmds;
-        assert(kernelType == KernelType::KSKIP);
 
         vector<PIMCmd> tmp_cmds{
             // Load 4x 64bit coefficients from A into GRF_A

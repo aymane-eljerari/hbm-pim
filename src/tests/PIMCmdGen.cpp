@@ -44,6 +44,9 @@ vector<PIMCmd> PIMCmdGen::getPIMCmds(KernelType ktype, int num_jump_to_be_taken,
         case KernelType::KSKIP:
             pim_kernel = make_unique<KSKIPKernel>(ktype);
             break;
+        case KernelType::HEMUL:
+            pim_kernel = make_unique<KSKIPKernel>(ktype); // we don't actually compute with this 
+            break;
         default:
             throw invalid_argument("Invalid kernel type");
     }

@@ -102,6 +102,10 @@ class PIMBenchTestCase
         {
             return string{"KSKIP"};
         }
+        else if (k == KernelType::HEMUL)
+        {
+            return string{"HEMUL"};
+        }
         else
         {
             throw invalid_argument("Invalid kernel type");
@@ -305,6 +309,57 @@ class KSKPIMBenchTest : public PIMBenchTestCase
     unsigned result_row_;
 };
 
+class HeMulBenchTest : public PIMBenchTestCase
+{
+  public:
+    HeMulBenchTest(KernelType k, unsigned b, unsigned out, unsigned in)
+        : PIMBenchTestCase(k, b, out, in)
+    {
+        input_row0_ = 0;
+        input_row1_ = 1024;
+        input_row2_ = 2048;
+        result_row_ = 2049;
+    }
+
+    uint64_t measureCycle(bool is_pim_ = false)
+    {
+        uint64_t cycle = 0;
+        uint64_t starting_addr = 0;
+
+        if (is_pim_ == true)
+        {
+            kernel_->executeHeMul(dim_data_->output_npbst_.getTotalDim(), pimBankType::ALL_BANK,
+                                    kernel_type_, input_row0_, input_row1_, input_row2_, result_row_);
+            kernel_->runPIM();
+            cycle = kernel_->getCycle();
+        }
+        else
+        {
+            uint32_t input_data_size_in_byte =
+                dim_data_->getDataSize(dim_data_->input_dim_, dim_data_->batch_size_);
+            uint32_t input1_data_size_in_byte =
+                dim_data_->getDataSize(dim_data_->input1_dim_, dim_data_->batch_size_);
+            uint32_t input2_data_size_in_byte =
+                dim_data_->getDataSize(dim_data_->input2_dim_, dim_data_->batch_size_);
+            uint32_t output_data_size_in_byte =
+                dim_data_->getDataSize(dim_data_->output_dim_, dim_data_->batch_size_);
+            starting_addr = genMemTraffic(mem_, false, input_data_size_in_byte, starting_addr);
+            starting_addr = genMemTraffic(mem_, false, input1_data_size_in_byte, starting_addr);
+            starting_addr = genMemTraffic(mem_, false, input2_data_size_in_byte, starting_addr);
+            run(mem_, &cycle);
+            genMemTraffic(mem_, true, output_data_size_in_byte, starting_addr);  // result-vec
+            run(mem_, &cycle);
+        }
+        return cycle;
+    }
+
+  private:
+    unsigned input_row0_;
+    unsigned input_row1_;
+    unsigned input_row2_;
+    unsigned result_row_;
+};
+
 
 class PIMBenchFixture : public testing::Test
 {
@@ -340,6 +395,10 @@ class PIMBenchFixture : public testing::Test
         else if (k == KernelType::KSKIP)
         {
             perfTest = new KSKPIMBenchTest(k, batch, out, in);
+        }
+        else if (k == KernelType::HEMUL)
+        {
+            perfTest = new HeMulBenchTest(k, batch, out, in);
         }
         else
         {

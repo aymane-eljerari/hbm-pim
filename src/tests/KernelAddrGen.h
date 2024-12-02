@@ -91,6 +91,7 @@ enum class KernelType
     GEMV,
     MUL,
     GEMVTREE,
-    KSKIP
+    KSKIP,
+    HEMUL,
 };
 #endif

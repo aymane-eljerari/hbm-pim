@@ -59,3 +59,10 @@ TEST_F(PIMBenchFixture, kskip)
     executeKernel();
     executePIMKernel();
 }
+
+TEST_F(PIMBenchFixture, hemul)
+{
+    setPIMBenchTestCase(KernelType::HEMUL, 1024 * 1024, 1024 * 1024);
+    executeKernel();
+    executePIMKernel();
+}

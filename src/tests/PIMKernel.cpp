@@ -615,6 +615,31 @@ void PIMKernel::executeKSKIP(int dim, pimBankType pb_type, KernelType ktype, int
     parkOut();
 }
 
+
+void PIMKernel::executeHeMul(int dim, pimBankType pb_type, KernelType ktype, int input0_row,
+                             int input1_row, int input2_row, int result_row){
+    int num_tile = dim / (num_banks_ * num_pim_chans_ * num_pim_ranks_ * num_grf_);
+    int num_jump_to_be_taken = num_tile - 1;
+    // this is the set of commands that are to be used in the PIM
+    vector<PIMCmd> pim_cmds = PIMCmdGen::getPIMCmds(ktype, num_jump_to_be_taken, 0, 0);
+
+    setControl(&bst_hab_pim_, true, getToggleCond(pb_type), false, false);
+    setControl(&bst_hab_, false, getToggleCond(pb_type), false, false);
+
+    parkIn();
+    changePIMMode(dramMode::SB, dramMode::HAB);
+
+    programCrf(pim_cmds); 
+    changePIMMode(dramMode::HAB, dramMode::HAB_PIM);
+
+    computeHeMul(input0_row, input1_row, input2_row, result_row);
+
+    // teardown
+    changePIMMode(dramMode::HAB_PIM, dramMode::HAB);
+    changePIMMode(dramMode::HAB, dramMode::SB);
+    parkOut();
+}
+
 // ! TODO: Investigate
 void PIMKernel::computeKSK(int input0_row,
                              int input1_row, int input2_row, int result_row) {
@@ -640,6 +665,29 @@ void PIMKernel::computeKSK(int input0_row,
     }
 
     return;
+}
+
+void PIMKernel::computeHeMul(int input0_row,
+                             int input1_row, int input2_row, int result_row)
+{
+    for (int i = 0; i < 128; i++)
+    {
+        int c = num_grf_ * i;
+        // only for even banks
+        int b = 0;
+        addTransactionAll(false, 0, b, input0_row, c, "BANK_TO_GRF_", &null_bst_, true,
+                            num_grf_);
+        addTransactionAll(false, 0, b, input1_row, c, "MUL", &null_bst_, true, num_grf_);
+        addTransactionAll(false, 0, b, input1_row, c, "MUL", &null_bst_, true, num_grf_);
+        addTransactionAll(false, 0, b, input2_row, c, "MOD", &null_bst_, true, num_grf_);
+        addTransactionAll(false, 0, b, NULL, c, "ADD", &null_bst_, true, num_grf_);
+        addTransactionAll(false, 0, b, result_row, c, "MUL", &null_bst_, true, num_grf_);
+        addTransactionAll(false, 0, b, result_row, c, "MUL", &null_bst_, true, num_grf_);
+        addTransactionAll(false, 0, b, result_row, c, "MUL", &null_bst_, true, num_grf_);
+        addTransactionAll(false, 0, b, result_row, c, "ADD", &null_bst_, true, num_grf_);
+        addTransactionAll(false, 0, b, result_row, c, "ADD", &null_bst_, true, num_grf_);
+        addTransactionAll(true, 0, b, result_row, c, "GRF_TO_BANK", &null_bst_, true, num_grf_);
+    }
 }
 
 void PIMKernel::computeAddOrMul(int num_tile, int input0_row, int result_row, int input1_row)

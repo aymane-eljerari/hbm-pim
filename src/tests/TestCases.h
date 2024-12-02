@@ -428,6 +428,7 @@ class DataDim
                 break;
             }
             case KernelType::KSKIP:
+            case KernelType::HEMUL:
             {
                 cout << "  InputA data dimension : " << input_dim_ << endl;
                 cout << "  InputB data dimension : " << input1_dim_ << endl;
