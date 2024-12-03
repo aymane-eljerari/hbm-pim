@@ -660,6 +660,12 @@ void PIMKernel::computeKSK(int input0_row,
                             num_grf_);
         addTransactionAll(false, 0, b, input1_row, c, "MUL", &null_bst_, true, num_grf_);
         addTransactionAll(false, 0, b, input2_row, c, "MOD", &null_bst_, true, num_grf_);
+        addTransactionAll(false, 0, b, input2_row, c, "MOD", &null_bst_, true, num_grf_);
+        addTransactionAll(false, 0, b, input2_row, c, "MOD", &null_bst_, true, num_grf_);
+        addTransactionAll(false, 0, b, input2_row, c, "MOD", &null_bst_, true, num_grf_);
+        addTransactionAll(false, 0, b, input2_row, c, "MOD", &null_bst_, true, num_grf_);
+        addTransactionAll(false, 0, b, input2_row, c, "MOD", &null_bst_, true, num_grf_);
+        addTransactionAll(false, 0, b, input2_row, c, "MOD", &null_bst_, true, num_grf_);
         addTransactionAll(false, 0, b, NULL, c, "ADD", &null_bst_, true, num_grf_);
         addTransactionAll(true, 0, b, result_row, c, "GRF_TO_BANK", &null_bst_, true, num_grf_);
     }
@@ -679,6 +685,12 @@ void PIMKernel::computeHeMul(int input0_row,
                             num_grf_);
         addTransactionAll(false, 0, b, input1_row, c, "MUL", &null_bst_, true, num_grf_);
         addTransactionAll(false, 0, b, input1_row, c, "MUL", &null_bst_, true, num_grf_);
+        addTransactionAll(false, 0, b, input2_row, c, "MOD", &null_bst_, true, num_grf_);
+        addTransactionAll(false, 0, b, input2_row, c, "MOD", &null_bst_, true, num_grf_);
+        addTransactionAll(false, 0, b, input2_row, c, "MOD", &null_bst_, true, num_grf_);
+        addTransactionAll(false, 0, b, input2_row, c, "MOD", &null_bst_, true, num_grf_);
+        addTransactionAll(false, 0, b, input2_row, c, "MOD", &null_bst_, true, num_grf_);
+        addTransactionAll(false, 0, b, input2_row, c, "MOD", &null_bst_, true, num_grf_);
         addTransactionAll(false, 0, b, input2_row, c, "MOD", &null_bst_, true, num_grf_);
         addTransactionAll(false, 0, b, NULL, c, "ADD", &null_bst_, true, num_grf_);
         addTransactionAll(false, 0, b, result_row, c, "MUL", &null_bst_, true, num_grf_);
