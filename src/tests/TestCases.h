@@ -399,6 +399,7 @@ class DataDim
                 break;
             }
             case KernelType::KSKIP:
+            case KernelType::TPROD:
             {
                 cout << "total input dimension: " << input_dim_ << endl;
                 cout << "total output dimension: " << output_dim_ << endl;
