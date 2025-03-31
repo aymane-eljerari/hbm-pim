@@ -142,6 +142,8 @@ class DataDim
                 return 2;
             case FP32:
                 return 4;
+            case INT64:
+                return 8;
             default:
                 return 0;
         }
@@ -208,6 +210,24 @@ class DataDim
 
                 return;
             }
+            case KernelType::KSKIP:
+            {
+                // input_npbst_.loadFp16("data/mul/eltmul_input0_" + input_dim_str + ".npy");
+                // input1_npbst_.loadFp16("data/mul/eltmul_input1_" + input_dim_str + ".npy");
+                // output_npbst_.loadFp16("data/mul/eltmul_output_" + input_dim_str + ".npy");
+                
+                // input_npbst_.loadint64("");
+                // input1_npbst_.loadint64("");
+                // input2_npbst_.loadint64("");
+                // output_npbst_.loadint64("");
+                
+                output_dim_ = bShape1ToDim(output_npbst_.getTotalDim());
+                input_dim_ = bShape1ToDim(input_npbst_.getTotalDim());
+                input1_dim_ = bShape1ToDim(input1_npbst_.getTotalDim());
+                input2_dim_ = bShape1ToDim(input1_npbst_.getTotalDim());
+
+                return;
+            }
             case KernelType::RELU:
             {
                 input_npbst_.loadFp16("data/relu/relu_input_" + input_dim_str + ".npy");
@@ -265,6 +285,20 @@ class DataDim
 
                 return;
             }
+            case KernelType::KSKIP:
+            {
+                input_npbst_.shape.push_back(batch_size_);
+                input_npbst_.shape.push_back(input_dim_);
+                input_npbst_.shape.push_back(input_dim_);
+                input_npbst_.shape.push_back(input_dim_);
+                input_npbst_.loadTobShape(4);
+
+                output_npbst_.shape.push_back(batch_size_);
+                output_npbst_.shape.push_back(output_dim_);
+                output_npbst_.loadTobShape(4);
+
+                return;
+            }
             default:
             {
                 return;
@@ -293,6 +327,7 @@ class DataDim
     unsigned long output_dim_;
     int input_dim_;
     int input1_dim_;
+    int input2_dim_;
     int batch_size_;
     bool used_data_;
 
@@ -311,6 +346,11 @@ class DataDim
             {
                 input1_dim_ = input_dim;
                 break;
+            }
+            case KernelType::KSKIP:
+            {
+                input_dim_ = input_dim;
+                output_dim_ = output_dim;
             }
             default:
             {
@@ -356,6 +396,12 @@ class DataDim
             case KernelType::RELU:
             {
                 cout << "  Input/output data dimension : " << output_dim_ << endl;
+                break;
+            }
+            case KernelType::KSKIP:
+            {
+                cout << "total input dimension: " << input_dim_ << endl;
+                cout << "total output dimension: " << output_dim_ << endl;
                 break;
             }
             default:

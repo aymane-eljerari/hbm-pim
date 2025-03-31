@@ -86,6 +86,8 @@ class PIMAddrManager
 enum class KernelType
 {
     ADD,
+    KSKIP,
+    TPROD,
     BN,
     RELU,
     GEMV,

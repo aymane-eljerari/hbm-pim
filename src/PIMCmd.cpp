@@ -138,6 +138,11 @@ uint32_t PIMCmd::toInt() const
             val |= toBit(src0Idx_, 4, 4);
             val |= toBit(src1Idx_, 4, 0);
             break;
+        
+        
+        // case PIMCmdType::MOD:
+
+            break;
 
         default:
             break;

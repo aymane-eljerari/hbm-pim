@@ -25,6 +25,7 @@ namespace DRAMSim
 enum class PIMCmdType
 {
     NOP,
+    // MOD,
     ADD,
     MUL,
     MAC,
