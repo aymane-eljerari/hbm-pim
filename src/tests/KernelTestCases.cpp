@@ -39,7 +39,7 @@ TEST_F(PIMKernelFixture, gemv_tree)
     reduced_result_ = new BurstType[output_dim / 16];
 
     kernel->preloadGemv(&dim_data->weight_npbst_);
-    kernel->executeGemv(&dim_data->weight_npbst_, &dim_data->input_npbst_, true);
+    kernel->executeGemv(&dim_data->weight_npbst_, &dim_data->input1_npbst_, true);
     unsigned end_col = kernel->getResultColGemv(dim_data->dimTobShape(input_dim), output_dim);
     kernel->readResult(result_, pimBankType::ODD_BANK, output_dim * numInputTile, 0, 0, end_col);
     kernel->runPIM();
@@ -49,7 +49,7 @@ TEST_F(PIMKernelFixture, gemv_tree)
     for (int i = 0; i < output_dim; i++)
     {
         kernel->adderTree(&result_[i], output_dim, numInputTile, 0, temp_fp16);
-        EXPECT_FP16_EQ(temp_fp16[0], dim_data->output_npbst_.getBurst(0).fp16Data_[i]);
+        EXPECT_FP16_EQ(temp_fp16[0], dim_data->output1_npbst_.getBurst(0).fp16Data_[i]);
         reduced_result_[i / 16].fp16Data_[i % 16] = temp_fp16[0];
     }
 
@@ -74,7 +74,7 @@ TEST_F(PIMKernelFixture, gemv)
     result_ = getResultPIM(KernelType::GEMV, dim_data, kernel, result_);
 
     testStatsClear();
-    expectAccuracy(KernelType::GEMV, output_dim, dim_data->output_npbst_,
+    expectAccuracy(KernelType::GEMV, output_dim, dim_data->output1_npbst_,
                    dim_data->getNumElementsPerBlocks());
 
     delete[] result_;
@@ -97,7 +97,7 @@ TEST_F(PIMKernelFixture, mul)
     kernel->runPIM();
 
     testStatsClear();
-    expectAccuracy(KernelType::MUL, dim_data->dimTobShape(output_dim), dim_data->output_npbst_);
+    expectAccuracy(KernelType::MUL, dim_data->dimTobShape(output_dim), dim_data->output1_npbst_);
 
     delete[] result_;
     delete dim_data;
@@ -118,7 +118,7 @@ TEST_F(PIMKernelFixture, add)
     kernel->runPIM();
 
     testStatsClear();
-    expectAccuracy(KernelType::ADD, dim_data->dimTobShape(output_dim), dim_data->output_npbst_);
+    expectAccuracy(KernelType::ADD, dim_data->dimTobShape(output_dim), dim_data->output1_npbst_);
 
     delete[] result_;
     delete dim_data;
@@ -137,7 +137,7 @@ TEST_F(PIMKernelFixture, relu)
     kernel->runPIM();
 
     testStatsClear();
-    expectAccuracy(KernelType::RELU, dim_data->dimTobShape(output_dim), dim_data->output_npbst_);
+    expectAccuracy(KernelType::RELU, dim_data->dimTobShape(output_dim), dim_data->output1_npbst_);
 
     delete[] result_;
     delete dim_data;

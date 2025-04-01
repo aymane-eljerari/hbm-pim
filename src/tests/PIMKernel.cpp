@@ -514,8 +514,10 @@ void PIMKernel::computeAddOrMul(int num_tile, int input0_row, int result_row,
 }
 
 void PIMKernel::executeKSKIP(int dim, pimBankType pb_type, KernelType ktype,
-                             int input0_row, int result_row, int input1_row,
-                             int input2_row) {
+                             int input_row_A, int input_row_evk1,
+                             int input_row_evk2, int input_row_C,
+                             int result_row_1, int result_row_2) {
+
   // num_banks_ = 16
   // num_pim_chans_ = 64
   // num_pim_ranks_ = 1
@@ -523,12 +525,12 @@ void PIMKernel::executeKSKIP(int dim, pimBankType pb_type, KernelType ktype,
   int num_pcus_per_channel = num_banks_ / 2;
   int num_pcus_total = num_pcus_per_channel * num_pim_chans_ * num_pim_ranks_;
 
-  //! num_tile determines the number of elements each GRF of each bank gets
+  //! num_tile determines the number of bursts each GRF
 
   // dim has 256 burst length granularity
-  int num_tile = dim / (num_pcus_total * num_grf_);
+  int num_tiles = dim / (num_pcus_total * num_grf_);
   // contiguous bank memory is interleaved across 8 GRFs
-  int num_jump_to_be_taken = num_tile - 1;
+  int num_jump_to_be_taken = num_tiles - 1;
   vector<PIMCmd> pim_cmds =
 
       PIMCmdGen::getPIMCmds(ktype, num_jump_to_be_taken, 0, 0);
@@ -540,44 +542,35 @@ void PIMKernel::executeKSKIP(int dim, pimBankType pb_type, KernelType ktype,
   programCrf(pim_cmds);
   changePIMMode(dramMode::HAB, dramMode::HAB_PIM);
 
-  computeKSKIP(num_tile, input0_row, result_row, input1_row, input2_row);
+  computeKSKIP(num_tiles, input_row_A, input_row_evk1, input_row_evk2,
+               input_row_C, result_row_1, result_row_2);
 
   changePIMMode(dramMode::HAB_PIM, dramMode::HAB);
   changePIMMode(dramMode::HAB, dramMode::SB);
   parkOut();
 }
 
-void PIMKernel::computeKSKIP(int num_tile, int input0_row, int result_row,
-                             int input1_row, int input2_row) {
+void PIMKernel::computeKSKIP(int num_tile, int input_row_A, int input_row_evk1,
+                             int input_row_evk2, int input_row_C,
+                             int result_row_1, int result_row_2) {
 
   // only 1 transaction to load MOD value so put it outside loop
-  addTransactionAll(false, 0, 0, input2_row, 0, "BANK_TO_SRF_", &null_bst_,
+  addTransactionAll(false, 0, 0, input_row_C, 0, "BANK_TO_SRF_", &null_bst_,
                     true, 1);
 
   for (int i = 0; i < num_tile; i++) {
     int c = num_grf_ * i;
-    // addTransactionAll(false, 0, 0, input0_row, c, "BANK_TO_GRF_", &null_bst_,
-    //                   true, num_grf_);
-
-    // // MUL + MOD
-    // addTransactionAll(false, 0, 0, input1_row, c, "MUL", &null_bst_, true,
-    //                   num_grf_);
-    // // addTransactionAll(false, 0, 0, 0, 0, "MOD", &null_bst_, true,
-    // num_grf_);
-
-    // // ADD + MOD
-    // addTransactionAll(false, 0, 0, 0, 0, "ADD", &null_bst_, true, num_grf_);
-
-    // // addTransactionAll(false, 0, 0, 0, 0, "MOD", &null_bst_, true, 1);
-
-    // // write result to odd bank
-    // addTransactionAll(true, 0, 1, result_row, c, "GRF_TO_BANK", &null_bst_,
-    //                   true, num_grf_);
     for (int dnum = 0; dnum < FHE_DNUM; dnum++) {
-      addTransactionAll(false, 0, 0, input0_row, c, "BANK_TO_GRF_", &null_bst_,
+      // fetch 2 evk
+      addTransactionAll(false, 0, 0, input_row_evk1, c, "BANK_TO_GRF_", &null_bst_,
                         true, num_grf_);
-      // MUL + MOD
-      addTransactionAll(false, 0, 0, input1_row, c, "MUL", &null_bst_, true,
+      addTransactionAll(false, 0, 0, input_row_evk2, c, "BANK_TO_GRF_", &null_bst_,
+                        true, num_grf_);
+      // evk1 * A 
+      addTransactionAll(false, 0, 0, input_row_A, c, "MUL", &null_bst_, true,
+                        num_grf_);
+      // evk2 * B
+      addTransactionAll(false, 0, 0, input_row_A, c, "MUL", &null_bst_, true,
                         num_grf_);
 
       if (dnum != 0) {
@@ -586,8 +579,10 @@ void PIMKernel::computeKSKIP(int num_tile, int input0_row, int result_row,
       }
     }
 
+    addTransactionAll(true, 0, 1, result_row_1, c, "GRF_TO_BANK", &null_bst_,
+                      true, num_grf_);
     // write result to odd bank
-    addTransactionAll(true, 0, 1, result_row, c, "GRF_TO_BANK", &null_bst_,
+    addTransactionAll(true, 0, 1, result_row_2, c, "GRF_TO_BANK", &null_bst_,
                       true, num_grf_);
   }
 }
@@ -607,9 +602,8 @@ void PIMKernel::executeTPROD(int dim, pimBankType pb_type, KernelType ktype,
   // dim has BL granularity
   int num_tile = dim / (num_pcus_total * num_grf_);
   // contiguous bank memory is interleaved across 8 GRFs
-  int num_jump_to_be_taken = num_tile - 1;
+  int num_jump_to_be_taken = (num_tile / num_grf_) - 1;
   vector<PIMCmd> pim_cmds =
-
       PIMCmdGen::getPIMCmds(ktype, num_jump_to_be_taken, 0, 0);
   setControl(&bst_hab_pim_, true, getToggleCond(pb_type), false, false);
   setControl(&bst_hab_, false, getToggleCond(pb_type), false, false);
@@ -628,24 +622,32 @@ void PIMKernel::executeTPROD(int dim, pimBankType pb_type, KernelType ktype,
 
 void PIMKernel::computeTPROD(int num_tile, int input0_row, int result_row,
                              int input1_row) {
+  //! 3 output results
 
   for (int i = 0; i < num_tile; i++) {
     int c = num_grf_ * i;
-    addTransactionAll(false, 0, 0, input0_row, c, "BANK_TO_GRF_", &null_bst_,
+    // 4 multiplications
+    for (int j = 0; j < 4; j++) {
+      addTransactionAll(false, 0, 0, input0_row, c, "BANK_TO_GRF_", &null_bst_,
+                        true, num_grf_);
+
+      addTransactionAll(false, 0, 0, input1_row, c, "MUL", &null_bst_, true,
+                        num_grf_);
+    }
+
+    // store a0b0
+    addTransactionAll(true, 0, 0, result_row, c, "GRF_TO_BANK", &null_bst_,
                       true, num_grf_);
 
-    // MUL + MOD
-    addTransactionAll(false, 0, 0, input1_row, c, "MUL", &null_bst_, true,
-                      num_grf_);
-    // addTransactionAll(false, 0, 0, 0, 0, "MOD", &null_bst_, true, num_grf_);
+    // store a1b1
+    addTransactionAll(true, 0, 0, result_row, c, "GRF_TO_BANK", &null_bst_,
+                      true, num_grf_);
 
-    // ADD + MOD
+    // add a1b0 + a0b1
     addTransactionAll(false, 0, 0, 0, 0, "ADD", &null_bst_, true, num_grf_);
 
-    // addTransactionAll(false, 0, 0, 0, 0, "MOD", &null_bst_, true, 1);
-
-    // write result to odd bank
-    addTransactionAll(true, 0, 1, result_row, c, "GRF_TO_BANK", &null_bst_,
+    // store a1b0 + a0b1
+    addTransactionAll(true, 0, 0, result_row, c, "GRF_TO_BANK", &null_bst_,
                       true, num_grf_);
   }
 }

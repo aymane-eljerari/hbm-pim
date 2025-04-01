@@ -83,15 +83,21 @@ public:
                  int num_jump_to_be_taken_even_bank = 0) override {
     vector<PIMCmd> pim_cmds;
     vector<PIMCmd> tmp_cmds{
-        PIMCmd(PIMCmdType::NOP, 1),
+        PIMCmd(PIMCmdType::FILL, PIMOpdType::SRF_A, PIMOpdType::EVEN_BANK),
+        // fetch evk tuple
         PIMCmd(PIMCmdType::FILL, PIMOpdType::GRF_A, PIMOpdType::EVEN_BANK),
-        // MUL+MOD
+        PIMCmd(PIMCmdType::FILL, PIMOpdType::GRF_A, PIMOpdType::EVEN_BANK),
+
+        // multiply evk tuple
         PIMCmd(PIMCmdType::MUL, PIMOpdType::GRF_A, PIMOpdType::GRF_A,
-               PIMOpdType::EVEN_BANK, 1),
+               PIMOpdType::EVEN_BANK, 0),
+        PIMCmd(PIMCmdType::MUL, PIMOpdType::GRF_A, PIMOpdType::GRF_A,
+               PIMOpdType::EVEN_BANK, 0),
+
         // ADD+MOD
         // accumulation in GRF_B
         PIMCmd(PIMCmdType::ADD, PIMOpdType::GRF_A, PIMOpdType::GRF_A,
-               PIMOpdType::GRF_B, 1),
+               PIMOpdType::GRF_B, 0),
         // dnum loop
         PIMCmd(PIMCmdType::JUMP, FHE_DNUM - 1, 4),
 
@@ -119,16 +125,14 @@ public:
         // MUL+MOD
         PIMCmd(PIMCmdType::MUL, PIMOpdType::GRF_A, PIMOpdType::GRF_A,
                PIMOpdType::EVEN_BANK, 1),
-        // ADD+MOD
-        PIMCmd(PIMCmdType::ADD, PIMOpdType::GRF_A, PIMOpdType::GRF_A,
-               PIMOpdType::GRF_A, 1),
         // 1st iter a0 b0
         // 2nd iter a1 b1
         // 3rd - 4th iters intermediate results for a1b0 + a0b1
         PIMCmd(PIMCmdType::JUMP, 3, 4),
 
-        // accumulation a1b0 + a0b1
-        PIMCmd(PIMCmdType::ADD, PIMOpdType::GRF_A, PIMOpdType::GRF_A, PIMOpdType::GRF_A)
+       // accumulation a1b0 + a0b1 (temporary results are already in GRF_A)
+        PIMCmd(PIMCmdType::ADD, PIMOpdType::GRF_A, PIMOpdType::GRF_A,
+               PIMOpdType::GRF_A)
 
     };
     pim_cmds.assign(tmp_cmds.begin(), tmp_cmds.end());

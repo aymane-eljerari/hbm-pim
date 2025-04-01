@@ -76,10 +76,9 @@ public:
       return string{"ADD"};
     } else if (k == KernelType::KSKIP) {
       return string{"KSKIP"};
-    } else if (k == KernelType::TPROD){
+    } else if (k == KernelType::TPROD) {
       return string{"TPROD"};
-    }
-     else if (k == KernelType::RELU) {
+    } else if (k == KernelType::RELU) {
       return string{"RELU"};
     } else {
       throw invalid_argument("Invalid kernel type");
@@ -114,7 +113,7 @@ public:
     uint64_t starting_addr = 0;
 
     if (is_pim_ == true) {
-      kernel_->executeGemv(&dim_data_->weight_npbst_, &dim_data_->input_npbst_,
+      kernel_->executeGemv(&dim_data_->weight_npbst_, &dim_data_->input1_npbst_,
                            false);
       kernel_->runPIM();
       cycle = kernel_->getCycle();
@@ -152,7 +151,7 @@ public:
     uint64_t starting_addr = 0;
 
     if (is_pim_ == true) {
-      kernel_->executeEltwise(dim_data_->output_npbst_.getTotalDim(),
+      kernel_->executeEltwise(dim_data_->output1_npbst_.getTotalDim(),
                               pimBankType::ALL_BANK, kernel_type_, input_row0_,
                               result_row_, input_row1_);
       kernel_->runPIM();
@@ -208,12 +207,15 @@ public:
 
     */
     // A
-    input_row0_ = 0;
+    input_row_A = 0;
     // evkB
-    input_row1_ = 3;
+    input_row_evk1 = 3;
+    input_row_evk2 = 6;
     // C
-    input_row2_ = 9;
-    result_row_ = 10;
+    input_row_C = 10;
+
+    result_row_1 = 11;
+    result_row_2 = 12;
   }
 
   uint64_t measureCycle(bool is_pim_ = false) {
@@ -221,9 +223,11 @@ public:
     uint64_t starting_addr = 0;
 
     if (is_pim_ == true) {
-      kernel_->executeKSKIP(dim_data_->output_npbst_.getTotalDim(),
-                            pimBankType::ALL_BANK, kernel_type_, input_row0_,
-                            result_row_, input_row1_, input_row2_);
+      std::cout << "\n\n# Output Burst: " << dim_data_->output1_npbst_.getTotalDim() << endl;
+      kernel_->executeKSKIP(dim_data_->output1_npbst_.getTotalDim(),
+                            pimBankType::EVEN_BANK, kernel_type_, input_row_A,
+                            input_row_evk1, input_row_evk2, input_row_C,
+                            result_row_1, result_row_2);
 
       kernel_->runPIM();
       cycle = kernel_->getCycle();
@@ -231,20 +235,12 @@ public:
       uint32_t input_data_size_in_byte =
           dim_data_->getDataSize(dim_data_->input_dim_, dim_data_->batch_size_);
 
-      // uint32_t input1_data_size_in_byte =
-      //     dim_data_->getDataSize(dim_data_->input_dim_,
-      //     dim_data_->batch_size_);
-
       uint32_t output_data_size_in_byte = dim_data_->getDataSize(
           dim_data_->output_dim_, dim_data_->batch_size_);
 
       starting_addr =
           genMemTraffic(mem_, false, input_data_size_in_byte, starting_addr);
 
-      // starting_addr =
-      //     genMemTraffic(mem_, false, input1_data_size_in_byte,
-      //     starting_addr);
-      //
       run(mem_, &cycle);
 
       genMemTraffic(mem_, true, output_data_size_in_byte,
@@ -256,10 +252,12 @@ public:
 
 private:
   // for PIM
-  unsigned input_row0_;
-  unsigned input_row1_;
-  unsigned input_row2_;
-  unsigned result_row_;
+  unsigned input_row_A;
+  unsigned input_row_evk1;
+  unsigned input_row_evk2;
+  unsigned input_row_C;
+  unsigned result_row_1;
+  unsigned result_row_2;
 };
 
 class TPRODPIMBenchTest : public PIMBenchTestCase {
@@ -294,9 +292,9 @@ public:
     uint64_t starting_addr = 0;
 
     if (is_pim_ == true) {
-      kernel_->executeKSKIP(dim_data_->output_npbst_.getTotalDim(),
-                            pimBankType::ALL_BANK, kernel_type_, input_row0_,
-                            result_row_, input_row1_, input_row2_);
+      kernel_->executeTPROD(dim_data_->output1_npbst_.getTotalDim(),
+                            pimBankType::EVEN_BANK, kernel_type_, input_row0_,
+                            result_row_, input_row1_);
 
       kernel_->runPIM();
       cycle = kernel_->getCycle();
@@ -348,7 +346,7 @@ public:
     uint64_t starting_addr = 0;
 
     if (is_pim_ == true) {
-      kernel_->executeEltwise(dim_data_->output_npbst_.getTotalDim(),
+      kernel_->executeEltwise(dim_data_->output1_npbst_.getTotalDim(),
                               pimBankType::ALL_BANK, KernelType::RELU,
                               input_row0_, result_row_, 0);
       kernel_->runPIM();

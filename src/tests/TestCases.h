@@ -166,63 +166,63 @@ class DataDim
                 {
                     string batch_size_str = to_string(batch_size_);
                     string batch_in_out_dim_str = batch_size_str + "_" + in_out_dim_str;
-                    input_npbst_.loadFp16("data/gemv/gemv_input_batch_" + batch_in_out_dim_str +
+                    input1_npbst_.loadFp16("data/gemv/gemv_input_batch_" + batch_in_out_dim_str +
                                           ".npy");
                     weight_npbst_.loadFp16("data/gemv/gemv_weight_batch_" + batch_in_out_dim_str +
                                            ".npy");
-                    output_npbst_.loadFp16("data/gemv/gemv_output_batch_" + batch_in_out_dim_str +
+                    output1_npbst_.loadFp16("data/gemv/gemv_output_batch_" + batch_in_out_dim_str +
                                            ".npy");
                 }
                 else
                 {
-                    input_npbst_.loadFp16("data/gemv/gemv_input_" + in_out_dim_str + ".npy");
+                    input1_npbst_.loadFp16("data/gemv/gemv_input_" + in_out_dim_str + ".npy");
                     weight_npbst_.loadFp16("data/gemv/gemv_weight_" + in_out_dim_str + ".npy");
-                    output_npbst_.loadFp16("data/gemv/gemv_output_" + in_out_dim_str + ".npy");
+                    output1_npbst_.loadFp16("data/gemv/gemv_output_" + in_out_dim_str + ".npy");
                 }
 
                 // output_dim_ = weight_npbst_.bShape[0];
-                output_dim_ = bShape1ToDim(output_npbst_.bShape[1]);
-                input_dim_ = bShape1ToDim(input_npbst_.bShape[1]);
-                batch_size_ = input_npbst_.bShape[0];
+                output_dim_ = bShape1ToDim(output1_npbst_.bShape[1]);
+                input_dim_ = bShape1ToDim(input1_npbst_.bShape[1]);
+                batch_size_ = input1_npbst_.bShape[0];
                 return;
             }
             case KernelType::ADD:
             {
-                input_npbst_.loadFp16("data/add/resadd_input0_" + input_dim_str + ".npy");
+                input1_npbst_.loadFp16("data/add/resadd_input0_" + input_dim_str + ".npy");
                 input1_npbst_.loadFp16("data/add/resadd_input1_" + input_dim_str + ".npy");
-                output_npbst_.loadFp16("data/add/resadd_output_" + input_dim_str + ".npy");
+                output1_npbst_.loadFp16("data/add/resadd_output_" + input_dim_str + ".npy");
 
-                output_dim_ = bShape1ToDim(output_npbst_.getTotalDim());
-                input_dim_ = bShape1ToDim(input_npbst_.getTotalDim());
+                output_dim_ = bShape1ToDim(output1_npbst_.getTotalDim());
+                input_dim_ = bShape1ToDim(input1_npbst_.getTotalDim());
                 input1_dim_ = bShape1ToDim(input1_npbst_.getTotalDim());
 
                 return;
             }
             case KernelType::MUL:
             {
-                input_npbst_.loadFp16("data/mul/eltmul_input0_" + input_dim_str + ".npy");
+                input1_npbst_.loadFp16("data/mul/eltmul_input0_" + input_dim_str + ".npy");
                 input1_npbst_.loadFp16("data/mul/eltmul_input1_" + input_dim_str + ".npy");
-                output_npbst_.loadFp16("data/mul/eltmul_output_" + input_dim_str + ".npy");
+                output1_npbst_.loadFp16("data/mul/eltmul_output_" + input_dim_str + ".npy");
 
-                output_dim_ = bShape1ToDim(output_npbst_.getTotalDim());
-                input_dim_ = bShape1ToDim(input_npbst_.getTotalDim());
+                output_dim_ = bShape1ToDim(output1_npbst_.getTotalDim());
+                input_dim_ = bShape1ToDim(input1_npbst_.getTotalDim());
                 input1_dim_ = bShape1ToDim(input1_npbst_.getTotalDim());
 
                 return;
             }
             case KernelType::KSKIP:
             {
-                // input_npbst_.loadFp16("data/mul/eltmul_input0_" + input_dim_str + ".npy");
+                // input1_npbst_.loadFp16("data/mul/eltmul_input0_" + input_dim_str + ".npy");
                 // input1_npbst_.loadFp16("data/mul/eltmul_input1_" + input_dim_str + ".npy");
-                // output_npbst_.loadFp16("data/mul/eltmul_output_" + input_dim_str + ".npy");
+                // output1_npbst_.loadFp16("data/mul/eltmul_output_" + input_dim_str + ".npy");
                 
-                // input_npbst_.loadint64("");
-                // input1_npbst_.loadint64("");
-                // input2_npbst_.loadint64("");
-                // output_npbst_.loadint64("");
+                input1_npbst_.loadint64("data/kskip/ksk_inputA_int64.npy");
+                input2_npbst_.loadint64("data/kskip/ksk_inputB_int64.npy");
+                input3_npbst_.loadint64("data/kskip/ksk_inputC_int64.npy");
+                output1_npbst_.loadint64("data/kskip/ksk_output_int64.npy");
                 
-                output_dim_ = bShape1ToDim(output_npbst_.getTotalDim());
-                input_dim_ = bShape1ToDim(input_npbst_.getTotalDim());
+                output_dim_ = bShape1ToDim(output1_npbst_.getTotalDim());
+                input_dim_ = bShape1ToDim(input1_npbst_.getTotalDim());
                 input1_dim_ = bShape1ToDim(input1_npbst_.getTotalDim());
                 input2_dim_ = bShape1ToDim(input1_npbst_.getTotalDim());
 
@@ -230,11 +230,11 @@ class DataDim
             }
             case KernelType::RELU:
             {
-                input_npbst_.loadFp16("data/relu/relu_input_" + input_dim_str + ".npy");
-                output_npbst_.loadFp16("data/relu/relu_output_" + input_dim_str + ".npy");
+                input1_npbst_.loadFp16("data/relu/relu_input_" + input_dim_str + ".npy");
+                output1_npbst_.loadFp16("data/relu/relu_output_" + input_dim_str + ".npy");
 
-                output_dim_ = bShape1ToDim(output_npbst_.getTotalDim());
-                input_dim_ = bShape1ToDim(input_npbst_.getTotalDim());
+                output_dim_ = bShape1ToDim(output1_npbst_.getTotalDim());
+                input_dim_ = bShape1ToDim(input1_npbst_.getTotalDim());
 
                 return;
             }
@@ -258,15 +258,15 @@ class DataDim
                 weight_npbst_.shape.push_back(input_dim_);
                 weight_npbst_.loadTobShape(16);
 
-                input_npbst_.shape.push_back(batch_size_);
-                input_npbst_.shape.push_back(input_dim_);
-                input_npbst_.loadTobShape(16);
+                input1_npbst_.shape.push_back(batch_size_);
+                input1_npbst_.shape.push_back(input_dim_);
+                input1_npbst_.loadTobShape(16);
 
-                for (int i = 0; i < input_npbst_.bShape[1]; i++)
+                for (int i = 0; i < input1_npbst_.bShape[1]; i++)
                 {
                     BurstType null_bst;
                     null_bst.set((float)0);
-                    input_npbst_.bData.push_back(null_bst);
+                    input1_npbst_.bData.push_back(null_bst);
                 }
 
                 return;
@@ -275,27 +275,26 @@ class DataDim
             case KernelType::MUL:
             case KernelType::RELU:
             {
-                input_npbst_.shape.push_back(batch_size_);
-                input_npbst_.shape.push_back(input_dim_);
-                input_npbst_.loadTobShape(16);
+                input1_npbst_.shape.push_back(batch_size_);
+                input1_npbst_.shape.push_back(input_dim_);
+                input1_npbst_.loadTobShape(16);
 
-                output_npbst_.shape.push_back(batch_size_);
-                output_npbst_.shape.push_back(output_dim_);
-                output_npbst_.loadTobShape(16);
+                output1_npbst_.shape.push_back(batch_size_);
+                output1_npbst_.shape.push_back(output_dim_);
+                output1_npbst_.loadTobShape(16);
 
                 return;
             }
             case KernelType::KSKIP:
             {
-                input_npbst_.shape.push_back(batch_size_);
-                input_npbst_.shape.push_back(input_dim_);
-                input_npbst_.shape.push_back(input_dim_);
-                input_npbst_.shape.push_back(input_dim_);
-                input_npbst_.loadTobShape(4);
+                input1_npbst_.shape.push_back(input_dim_);
+                input1_npbst_.shape.push_back(input_dim_);
+                input1_npbst_.shape.push_back(input_dim_);
+                input1_npbst_.loadTobShape(4);
 
-                output_npbst_.shape.push_back(batch_size_);
-                output_npbst_.shape.push_back(output_dim_);
-                output_npbst_.loadTobShape(4);
+                output1_npbst_.shape.push_back(batch_size_);
+                output1_npbst_.shape.push_back(output_dim_);
+                output1_npbst_.loadTobShape(4);
 
                 return;
             }
@@ -308,10 +307,13 @@ class DataDim
 
   public:
     /* data */
-    NumpyBurstType input_npbst_;
     NumpyBurstType input1_npbst_;
+    NumpyBurstType input2_npbst_;
+    NumpyBurstType input3_npbst_;
     NumpyBurstType weight_npbst_;
-    NumpyBurstType output_npbst_;
+    NumpyBurstType output1_npbst_;
+    NumpyBurstType output2_npbst_;
+    NumpyBurstType output3_npbst_;
 
     /* dump */
     NumpyBurstType preloaded_npbst_;
