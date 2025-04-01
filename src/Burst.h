@@ -54,7 +54,7 @@ union BurstType {
     set(x0, x1, x2, x3, x4, x5, x6, x7);
   }
 
-  BurstType(int64_t x0, int64_t x1, uint32_t x2, uint32_t x3) {
+  BurstType(int64_t x0, int64_t x1, int64_t x2, int64_t x3) {
     set(x0, x1, x2, x3);
   }
 
@@ -97,7 +97,7 @@ union BurstType {
     u32Data_[7] = x7;
   }
 
-  void set(uint32_t x0, int64_t x1, int64_t x2, int64_t x3) {
+  void set(int64_t x0, int64_t x1, int64_t x2, int64_t x3) {
     int64Data_[0] = x0;
     int64Data_[1] = x1;
     int64Data_[2] = x2;
@@ -281,21 +281,20 @@ union BurstType {
     return (memcmp(this, &rhs, 32));
   }
 
-//   BurstType operator+(const BurstType &rhs) const {
-//     BurstType ret;
-//     for (int i = 0; i < 16; i++) {
-//       ret.fp16Data_[i] = fp16Data_[i] + rhs.fp16Data_[i];
-//     }
-//     return ret;
-//   }
-//   BurstType operator*(const BurstType &rhs) const {
-//     BurstType ret;
-//     for (int i = 0; i < 16; i++) {
-//       ret.fp16Data_[i] = fp16Data_[i] * rhs.fp16Data_[i];
-//     }
-//     return ret;
-//   }
-
+  //   BurstType operator+(const BurstType &rhs) const {
+  //     BurstType ret;
+  //     for (int i = 0; i < 16; i++) {
+  //       ret.fp16Data_[i] = fp16Data_[i] + rhs.fp16Data_[i];
+  //     }
+  //     return ret;
+  //   }
+  //   BurstType operator*(const BurstType &rhs) const {
+  //     BurstType ret;
+  //     for (int i = 0; i < 16; i++) {
+  //       ret.fp16Data_[i] = fp16Data_[i] * rhs.fp16Data_[i];
+  //     }
+  //     return ret;
+  //   }
 
   BurstType operator+(const BurstType &rhs) const {
     BurstType ret;
@@ -311,7 +310,6 @@ union BurstType {
     }
     return ret;
   }
-
 
   fp16 fp16Data_[16];
   uint8_t u8Data_[32];
@@ -375,8 +373,9 @@ struct NumpyBurstType {
     npy::LoadArrayFromNumpy(filename, shape, u16Data);
     loadTobShape((double)4);
     for (int i = 0; i < int64Data.size(); i += 4) {
-            BurstType burst((u16Data[i]), (u16Data[i + 1]), (u16Data[i + 2]), (u16Data[i + 3]));
-            bData.push_back(burst);
+      BurstType burst((int64Data[i]), (int64Data[i + 1]), (int64Data[i + 2]),
+                      (int64Data[i + 3]));
+      bData.push_back(burst);
     }
   }
 
