@@ -106,16 +106,20 @@ public:
                     int input_row_A, int input_row_evk1, int input_row_evk2,
                     int input_row_C, int result_row_1, int result_row_2);
   void executeTPROD(int dim, pimBankType pb_type, KernelType ktype,
-                    int input0_row, int result_row, int input1_row);
+                    int ciphertxtA_row1, int ciphertxtA_row2,
+                    int plaintextB_row1, int plaintextB_row2, int result_row_1,
+                    int result_row_2, int result_row_3);
   void computeGemv(NumpyBurstType *data, int num_input_tiles,
                    int num_output_tile, int input_tile, int output_tile,
                    int batch_idx, pimBankType bank_types);
   void computeAddOrMul(int numTile, int input0Row, int resultRow,
                        int input1Row);
-  void computeKSKIP(int num_tile, int input_row_A, int input_row_evk1, int input_row_evk2,
-                    int input_row_C, int result_row_1, int result_row_2);
-  void computeTPROD(int num_tile, int input0_row, int result_row,
-                    int input1_row);
+  void computeKSKIP(int num_tile, int input_row_A, int input_row_evk1,
+                    int input_row_evk2, int input_row_C, int result_row_1,
+                    int result_row_2);
+  void computeTPROD(int num_tile, int ciphertxtA_row1, int ciphertxtA_row2,
+                    int plaintextB_row1, int plaintextB_row2, int result_row_1,
+                    int result_row_2, int result_row_3);
   void computeRelu(int numTile, int input0Row, int resultRow);
   // void computeBn(int numTile, int input0Row, int resultRow);
 

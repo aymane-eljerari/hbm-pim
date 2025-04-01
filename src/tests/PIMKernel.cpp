@@ -572,7 +572,7 @@ void PIMKernel::computeKSKIP(int num_tile, int input_row_A, int input_row_evk1,
       // evk2 * A
       addTransactionAll(false, 0, 0, input_row_A, c, "MUL", &null_bst_, true,
                         num_grf_);
-// dnum-1 accumulations
+      // dnum-1 accumulations
       if (dnum != 0) {
         addTransactionAll(false, 0, 0, 0, 0, "ADD", &null_bst_, true, num_grf_);
       }
@@ -586,7 +586,10 @@ void PIMKernel::computeKSKIP(int num_tile, int input_row_A, int input_row_evk1,
 }
 
 void PIMKernel::executeTPROD(int dim, pimBankType pb_type, KernelType ktype,
-                             int input0_row, int result_row, int input1_row) {
+                             int ciphertxtA_row1, int ciphertxtA_row2,
+                             int plaintextB_row1, int plaintextB_row2,
+                             int result_row_1, int result_row_2,
+                             int result_row_3) {
   // num_banks_ = 16
   // num_pim_chans_ = 64
   // num_pim_ranks_ = 1
@@ -600,7 +603,7 @@ void PIMKernel::executeTPROD(int dim, pimBankType pb_type, KernelType ktype,
   // dim has BL granularity
   int num_tile = dim / (num_pcus_total * num_grf_);
   // contiguous bank memory is interleaved across 8 GRFs
-  int num_jump_to_be_taken = (num_tile / num_grf_) - 1;
+  int num_jump_to_be_taken = num_tile - 1;
   vector<PIMCmd> pim_cmds =
       PIMCmdGen::getPIMCmds(ktype, num_jump_to_be_taken, 0, 0);
   setControl(&bst_hab_pim_, true, getToggleCond(pb_type), false, false);
@@ -611,41 +614,50 @@ void PIMKernel::executeTPROD(int dim, pimBankType pb_type, KernelType ktype,
   programCrf(pim_cmds);
   changePIMMode(dramMode::HAB, dramMode::HAB_PIM);
 
-  computeTPROD(num_tile, input0_row, result_row, input1_row);
+  computeTPROD(num_tile, ciphertxtA_row1, ciphertxtA_row2, plaintextB_row1,
+               plaintextB_row2, result_row_1, result_row_2, result_row_3);
 
   changePIMMode(dramMode::HAB_PIM, dramMode::HAB);
   changePIMMode(dramMode::HAB, dramMode::SB);
   parkOut();
 }
 
-void PIMKernel::computeTPROD(int num_tile, int input0_row, int result_row,
-                             int input1_row) {
-  //! 3 output results
+void PIMKernel::computeTPROD(int num_tile, int ciphertxtA_row1,
+                             int ciphertxtA_row2, int plaintextB_row1,
+                             int plaintextB_row2, int result_row_1,
+                             int result_row_2, int result_row_3) {
+  // mod fetch
+  addTransactionAll(false, 0, 0, 0, 0, "BANK_TO_SRF_", &null_bst_, true, 1);
 
   for (int i = 0; i < num_tile; i++) {
     int c = num_grf_ * i;
-    // 4 multiplications
-    for (int j = 0; j < 4; j++) {
-      addTransactionAll(false, 0, 0, input0_row, c, "BANK_TO_GRF_", &null_bst_,
-                        true, num_grf_);
 
-      addTransactionAll(false, 0, 0, input1_row, c, "MUL", &null_bst_, true,
-                        num_grf_);
+    // 4 multiplications
+    // cA0 * pB0
+    // cA0 * pB1
+    // cA1 * pB0
+    // cA1 * pB1
+    for (int j = 0; j < 4; j++) {
+      addTransactionAll(false, 0, 0, ciphertxtA_row1, c, "BANK_TO_GRF_",
+                        &null_bst_, true, num_grf_);
+
+      addTransactionAll(false, 0, 0, plaintextB_row1, c, "MUL", &null_bst_,
+                        true, num_grf_);
     }
 
     // store a0b0
-    addTransactionAll(true, 0, 0, result_row, c, "GRF_TO_BANK", &null_bst_,
+    addTransactionAll(true, 0, 0, result_row_1, c, "GRF_TO_BANK", &null_bst_,
                       true, num_grf_);
 
     // store a1b1
-    addTransactionAll(true, 0, 0, result_row, c, "GRF_TO_BANK", &null_bst_,
+    addTransactionAll(true, 0, 0, result_row_2, c, "GRF_TO_BANK", &null_bst_,
                       true, num_grf_);
 
     // add a1b0 + a0b1
     addTransactionAll(false, 0, 0, 0, 0, "ADD", &null_bst_, true, num_grf_);
 
     // store a1b0 + a0b1
-    addTransactionAll(true, 0, 0, result_row, c, "GRF_TO_BANK", &null_bst_,
+    addTransactionAll(true, 0, 0, result_row_3, c, "GRF_TO_BANK", &null_bst_,
                       true, num_grf_);
   }
 }

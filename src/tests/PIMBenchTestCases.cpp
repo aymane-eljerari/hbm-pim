@@ -60,10 +60,13 @@ TEST_F(PIMBenchFixture, kskip) {
 }
 
 TEST_F(PIMBenchFixture, tprod) {
-  int input_dim = 2 * (2 * FHE_N);
-  int output_dim = 3 * FHE_N;
+  int ciphertxt_A_dim = 2 * FHE_N;
+  int plaintxt_B_dim = 2 * FHE_N;
+  int result_dim = 3 * FHE_N;
+  
+  int input_total = ciphertxt_A_dim + plaintxt_B_dim;
 
-  setPIMBenchTestCase(KernelType::TPROD, output_dim, input_dim);
+  setPIMBenchTestCase(KernelType::TPROD, result_dim, input_total);
   executeKernel();
   executePIMKernel();
 }

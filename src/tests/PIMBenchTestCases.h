@@ -33,8 +33,8 @@ public:
         "example_app", 256 * 64 * 2);
     // # of pim channel = 64, # of pim rank = 1
     //? 16 pCH per rank for PIM?
-    kernel_ = make_shared<PIMKernel>(pim_mem_, 64, 1);
     dim_data_ = new DataDim(kernel_type_, batch_, out_, in_, false);
+    kernel_ = make_shared<PIMKernel>(pim_mem_, 64, 1);
   }
 
   virtual ~PIMBenchTestCase() {
@@ -223,7 +223,6 @@ public:
     uint64_t starting_addr = 0;
 
     if (is_pim_ == true) {
-      std::cout << "\n\n# Output Burst: " << dim_data_->output1_npbst_.getTotalDim() << endl;
       kernel_->executeKSKIP(dim_data_->output1_npbst_.getTotalDim(),
                             pimBankType::EVEN_BANK, kernel_type_, input_row_A,
                             input_row_evk1, input_row_evk2, input_row_C,
@@ -269,8 +268,8 @@ public:
       1 column -> 4x 64bit = 256 bit = 32 bytes
       1 row -> 32 columns * 32 bytes per colum = 1024 bytes
 
-      inputA: (2, 2^16)
-      inputB: (2, 2^16)
+      ciphertxtA: (2, 2^16)
+      plaintxtB: (2, 2^16)
       output: (3, 2^16)
 
       per PCU
@@ -281,10 +280,15 @@ public:
 
     */
     // A
-    input_row0_ = 0;
+    ciphertxtA_row_1 = 0;
+    ciphertxtA_row_2 = 1;
     // B
-    input_row1_ = 2;
-    result_row_ = 4;
+    plaintextB_row_1 = 2;
+    plaintextB_row_2 = 3;
+
+    result_row_1 = 4;
+    result_row_2 = 5;
+    result_row_3 = 6;
   }
 
   uint64_t measureCycle(bool is_pim_ = false) {
@@ -292,9 +296,10 @@ public:
     uint64_t starting_addr = 0;
 
     if (is_pim_ == true) {
-      kernel_->executeTPROD(dim_data_->output1_npbst_.getTotalDim(),
-                            pimBankType::EVEN_BANK, kernel_type_, input_row0_,
-                            result_row_, input_row1_);
+      kernel_->executeTPROD(
+          dim_data_->output1_npbst_.getTotalDim(), pimBankType::EVEN_BANK,
+          kernel_type_, ciphertxtA_row_1, ciphertxtA_row_2, plaintextB_row_1,
+          plaintextB_row_2, result_row_1, result_row_2, result_row_3);
 
       kernel_->runPIM();
       cycle = kernel_->getCycle();
@@ -327,10 +332,16 @@ public:
 
 private:
   // for PIM
-  unsigned input_row0_;
-  unsigned input_row1_;
-  unsigned input_row2_;
-  unsigned result_row_;
+  int ciphertxtA_row_1;
+  int ciphertxtA_row_2;
+
+  int plaintextB_row_1;
+  int plaintextB_row_2;
+  
+
+  int result_row_1;
+  int result_row_2;
+  int result_row_3;
 };
 
 class ActPIMBenchTest : public PIMBenchTestCase {
