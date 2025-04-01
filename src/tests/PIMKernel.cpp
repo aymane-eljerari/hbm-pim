@@ -569,7 +569,7 @@ void PIMKernel::computeKSKIP(int num_tile, int input_row_A, int input_row_evk1,
       // evk1 * A
       addTransactionAll(false, 0, 0, input_row_A, c, "MUL", &null_bst_, true,
                         num_grf_);
-      // evk2 * B
+      // evk2 * A
       addTransactionAll(false, 0, 0, input_row_A, c, "MUL", &null_bst_, true,
                         num_grf_);
 // dnum-1 accumulations
