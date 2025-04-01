@@ -562,26 +562,24 @@ void PIMKernel::computeKSKIP(int num_tile, int input_row_A, int input_row_evk1,
     int c = num_grf_ * i;
     for (int dnum = 0; dnum < FHE_DNUM; dnum++) {
       // fetch 2 evk
-      addTransactionAll(false, 0, 0, input_row_evk1, c, "BANK_TO_GRF_", &null_bst_,
-                        true, num_grf_);
-      addTransactionAll(false, 0, 0, input_row_evk2, c, "BANK_TO_GRF_", &null_bst_,
-                        true, num_grf_);
-      // evk1 * A 
+      addTransactionAll(false, 0, 0, input_row_evk1, c, "BANK_TO_GRF_",
+                        &null_bst_, true, num_grf_);
+      addTransactionAll(false, 0, 0, input_row_evk2, c, "BANK_TO_GRF_",
+                        &null_bst_, true, num_grf_);
+      // evk1 * A
       addTransactionAll(false, 0, 0, input_row_A, c, "MUL", &null_bst_, true,
                         num_grf_);
       // evk2 * B
       addTransactionAll(false, 0, 0, input_row_A, c, "MUL", &null_bst_, true,
                         num_grf_);
-
+// dnum-1 accumulations
       if (dnum != 0) {
-        // ADD + MOD
         addTransactionAll(false, 0, 0, 0, 0, "ADD", &null_bst_, true, num_grf_);
       }
     }
-
+    // store result tuple
     addTransactionAll(true, 0, 1, result_row_1, c, "GRF_TO_BANK", &null_bst_,
                       true, num_grf_);
-    // write result to odd bank
     addTransactionAll(true, 0, 1, result_row_2, c, "GRF_TO_BANK", &null_bst_,
                       true, num_grf_);
   }
