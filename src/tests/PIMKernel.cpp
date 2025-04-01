@@ -676,8 +676,9 @@ void PIMKernel::executePTMul(int dim, pimBankType pb_type, KernelType ktype, int
   int num_tile = dim / (num_pcus_total * num_grf_);
   int num_jump_to_be_taken = num_tile - 1;
 
+  cout << "going to get commands" <<endl;
   vector<PIMCmd> pim_cmds = PIMCmdGen::getPIMCmds(ktype, num_jump_to_be_taken, 0, 0);
-
+  cout << "got commands" << endl;
   setControl(&bst_hab_pim_, true, getToggleCond(pb_type), false, false);
   setControl(&bst_hab_, false, getToggleCond(pb_type), false, false);
 
@@ -705,6 +706,50 @@ void PIMKernel::computePTMul(int num_tile, int input0_row, int result_row, int i
     addTransactionAll(false, 0, 0, input1_row, c, "MUL", &null_bst_, true, num_grf_);
     addTransactionAll(false, 0, 0, input1_row, c, "MUL", &null_bst_, true, num_grf_);
     addTransactionAll(true, 0, 0, result_row, c, "GRF_TO_BANK", &null_bst_, true, num_grf_);
+  }
+}
+
+// H: HEAdd
+void PIMKernel::executeHEAdd(int dim, pimBankType pb_type, KernelType ktype, int input0_row,
+                             int result_row, int input1_row)
+{
+  int num_pcus_per_channel = num_banks_ / 2;
+  int num_pcus_total = num_pcus_per_channel * num_pim_chans_ * num_pim_ranks_;
+
+  int num_tile = dim / (num_pcus_total * num_grf_);
+  int num_jump_to_be_taken = num_tile - 1;
+
+  vector<PIMCmd> pim_cmds = PIMCmdGen::getPIMCmds(ktype, num_jump_to_be_taken, 0, 0);
+
+  setControl(&bst_hab_pim_, true, getToggleCond(pb_type), false, false);
+  setControl(&bst_hab_, false, getToggleCond(pb_type), false, false);
+
+  parkIn();
+  changePIMMode(dramMode::SB, dramMode::HAB);
+  programCrf(pim_cmds);
+  changePIMMode(dramMode::HAB, dramMode::HAB_PIM);
+
+  computeHEAdd(num_tile, input0_row, result_row, input1_row);
+
+  changePIMMode(dramMode::HAB_PIM, dramMode::HAB);
+  changePIMMode(dramMode::HAB, dramMode::SB);
+  parkOut();
+}
+
+void PIMKernel::computeHEAdd(int num_tile, int input0_row, int result_row, int input1_row)
+{
+  for (int i = 0; i < num_tile; i++)
+  {
+    int c = num_grf_ * i;
+    // "addTransactionToAll" is like "all pim units are doing this"
+    addTransactionAll(false, 0, 0, input0_row, c, "BANK_TO_GRF_", &null_bst_, true,
+                      num_grf_);
+    addTransactionAll(false, 0, 0, 0, 0, "ADD", &null_bst_, true, num_grf_);
+    addTransactionAll(false, 0, 0, input0_row, c, "BANK_TO_GRF_", &null_bst_, true,
+      num_grf_);
+    addTransactionAll(false, 0, 0, 0, 0, "ADD", &null_bst_, true, num_grf_);
+    addTransactionAll(true, 0, 0, result_row, c, "GRF_TO_BANK", &null_bst_, true, num_grf_);
+    
   }
 }
 

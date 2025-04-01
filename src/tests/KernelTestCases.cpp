@@ -145,9 +145,14 @@ TEST_F(PIMKernelFixture, relu)
 
 
 // H: PTMul
-// // Currently copied from "mul"
-// // Idk if I actually need this, is this just for numbers?
+
 TEST_F(PIMKernelFixture, ptmul)
+{
+    // Empty
+}
+
+// H: HEADD
+TEST_F(PIMKernelFixture, headd)
 {
     // Empty
 }

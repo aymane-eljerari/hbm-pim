@@ -51,6 +51,10 @@ vector<PIMCmd> PIMCmdGen::getPIMCmds(KernelType ktype, int num_jump_to_be_taken,
     case KernelType::PTMUL:
         pim_kernel = make_unique<PTMulPIMKernel>(ktype);
         break;
+        // H: HEADD
+    case KernelType::HEADD:
+        pim_kernel = make_unique<HEAddPIMKernel>(ktype);
+        break;
     default:
         throw invalid_argument("Invalid kernel type");
     }

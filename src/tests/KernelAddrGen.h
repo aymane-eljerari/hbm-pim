@@ -95,5 +95,7 @@ enum class KernelType
     GEMVTREE,
     // H: PTMul
     PTMUL,
+    // H: HEADD
+    HEADD
 };
 #endif

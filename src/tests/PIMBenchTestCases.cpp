@@ -91,3 +91,13 @@ TEST_F(PIMBenchFixture, ptmul)
   executeKernel();
   executePIMKernel();
 }
+
+// H: HEAdd
+TEST_F(PIMBenchFixture, headd)
+{
+  int input_dim = 2 * (2 * FHE_N); // 2A + 2B
+  int output_dim = 2 * FHE_N; // 2O
+  setPIMBenchTestCase(KernelType::HEADD, output_dim, input_dim); // (KernelType, out_vec, in_vec)
+  executeKernel();
+  executePIMKernel();
+}

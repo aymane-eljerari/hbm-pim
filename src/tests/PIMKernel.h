@@ -105,6 +105,11 @@ public:
   void executeKSKIP(int dim, pimBankType bank_types, KernelType ktype,
                     int input0_row, int result_row, int input1_row = 0,
                     int input2_row = 0);
+  // H: HEADD
+  void executeHEAdd(int dim, pimBankType bank_types, KernelType ktype,
+                      int input0_row, int result_row, int input1_row = 0);
+  void computeHEAdd(int numTile, int input0Row, int resultRow,
+                       int input1Row);
   void executeTPROD(int dim, pimBankType pb_type, KernelType ktype,
                                int input0_row, int result_row, int input1_row);
   void computeGemv(NumpyBurstType *data, int num_input_tiles,

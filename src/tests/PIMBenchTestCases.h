@@ -105,6 +105,10 @@ public:
     {
       return string{"RELU"};
     }
+    else if (k == KernelType::HEADD)
+    {
+      return string("HEADD");
+    }
     else
     {
       throw invalid_argument("Invalid kernel type");
@@ -455,14 +459,12 @@ public:
     inputB: (1 * 2^16)/512 = 128 coeff (1024 bytes = 1 row)
     output: (2 * 2^16)/512 = 256 coeff (2048 bytes = 2 rows)
     */
-   // A
-   input_row0_ = 0;
-   // B
-   input_row1_ = 2;
-   // output
-   result_row_ = 3;
-
-
+    // A
+    input_row0_ = 0;
+    // B
+    input_row1_ = 2;
+    // output
+    result_row_ = 3;
   }
 
   uint64_t measureCycle(bool is_pim_ = false)
@@ -473,6 +475,80 @@ public:
     if (is_pim_ == true)
     {
       kernel_->executePTMul(dim_data_->output_npbst_.getTotalDim(), pimBankType::ALL_BANK,
+                            kernel_type_, input_row0_, result_row_, input_row1_);
+      kernel_->runPIM();
+      cycle = kernel_->getCycle();
+    }
+    else
+    {
+      // TODO: This is directly copied from KSK
+      uint32_t input_data_size_in_byte =
+          dim_data_->getDataSize(dim_data_->input_dim_, dim_data_->batch_size_);
+
+      uint32_t output_data_size_in_byte = dim_data_->getDataSize(
+          dim_data_->output_dim_, dim_data_->batch_size_);
+
+      starting_addr =
+          genMemTraffic(mem_, false, input_data_size_in_byte, starting_addr);
+
+      run(mem_, &cycle);
+
+      genMemTraffic(mem_, true, output_data_size_in_byte,
+                    starting_addr); // result-vec
+      run(mem_, &cycle);
+    }
+    return cycle;
+  }
+
+private:
+  // for PIM
+  unsigned input_row0_;
+  unsigned input_row1_;
+  unsigned result_row_;
+};
+
+// H: HEAdd
+//! Is this right or do I need to split A into A[0] amd A[1]
+class HEAddPIMBenchTest : public PIMBenchTestCase
+{
+public:
+  HEAddPIMBenchTest(KernelType k, unsigned b, unsigned out, unsigned in)
+      : PIMBenchTestCase(k, b, out, in)
+  {
+    /*
+    512 PIM Banks
+    1 coeff = 64 bits = 8 bytes
+
+    PIM Bank: 2^14 rows x 2^5 columns
+    1 column -> 4x 64bit = 256 bit = 32 bytes
+    1 row -> 32 columns * 32 bytes per colum = 1024 bytes
+
+    1 limb PTMul
+    inputA: (2, 2^16)
+    inputB: (2, 2^16)
+    output: (2, 2^16)
+
+    per PCU
+    inputA: (2 * 2^16)/512 = 256 coeff (2048 bytes = 2 rows)
+    inputB: (2 * 2^16)/512 = 256 coeff (2048 bytes = 2 rows)
+    output: (2 * 2^16)/512 = 256 coeff (2048 bytes = 2 rows)
+    */
+    // A
+    input_row0_ = 0;
+    // B
+    input_row1_ = 2;
+    // output
+    result_row_ = 4;
+  }
+
+  uint64_t measureCycle(bool is_pim_ = false)
+  {
+    uint64_t cycle = 0;
+    uint64_t starting_addr = 0;
+
+    if (is_pim_ == true)
+    {
+      kernel_->executeHEAdd(dim_data_->output_npbst_.getTotalDim(), pimBankType::ALL_BANK,
                             kernel_type_, input_row0_, result_row_, input_row1_);
       kernel_->runPIM();
       cycle = kernel_->getCycle();
@@ -548,6 +624,10 @@ public:
     else if (k == KernelType::PTMUL)
     {
       perfTest = new PTMulPIMBenchTest(k, batch, out, in);
+    }
+    else if (k == KernelType::HEADD)
+    {
+      perfTest = new HEAddPIMBenchTest(k, batch, out, in);
     }
     else
     {

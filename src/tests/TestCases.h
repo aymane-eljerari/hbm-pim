@@ -244,11 +244,20 @@ class DataDim
                 // input1_npbst_.loadFp16("data/mul/eltmul_input1_" + input_dim_str + ".npy");
                 // output_npbst_.loadFp16("data/mul/eltmul_output_" + input_dim_str + ".npy");
 
-                input_npbst_.loadint64("data/mul/eltmul_output_u64_" + input_dim_str + ".npy");
-                input1_npbst_.loadint64("data/mul/eltmul_output_u64_" + input_dim_str + ".npy");
-                output_npbst_.loadint64("data/mul/eltmul_output_u64_" + input_dim_str + ".npy");
+                // input_npbst_.loadint64("data/mul/eltmul_output_u64_" + input_dim_str + ".npy");
+                // input1_npbst_.loadint64("data/mul/eltmul_output_u64_" + input_dim_str + ".npy");
+                // output_npbst_.loadint64("data/mul/eltmul_output_u64_" + input_dim_str + ".npy");
 
 
+                output_dim_ = bShape1ToDim(output_npbst_.getTotalDim());
+                input_dim_ = bShape1ToDim(input_npbst_.getTotalDim());
+                input1_dim_ = bShape1ToDim(input1_npbst_.getTotalDim());
+
+                return;
+            }
+            // H: HEADD
+            case KernelType::HEADD:
+            {
                 output_dim_ = bShape1ToDim(output_npbst_.getTotalDim());
                 input_dim_ = bShape1ToDim(input_npbst_.getTotalDim());
                 input1_dim_ = bShape1ToDim(input1_npbst_.getTotalDim());
@@ -324,6 +333,21 @@ class DataDim
                 input_npbst_.shape.push_back(input_dim_); // A
                 input_npbst_.shape.push_back(input_dim_); // B
                 input_npbst_.loadTobShape(4); // Im guessing this is 64-bit
+
+                output_npbst_.shape.push_back(batch_size_);
+                output_npbst_.shape.push_back(output_dim_);
+                output_npbst_.loadTobShape(4);
+
+                return;
+            }
+            // H: HEAdd
+            // Not sure about this
+            // Exactly the same as PTMul
+            case KernelType::HEADD:
+            {
+                input_npbst_.shape.push_back(batch_size_);
+                input_npbst_.shape.push_back(input_dim_);
+                input_npbst_.loadTobShape(4);
 
                 output_npbst_.shape.push_back(batch_size_);
                 output_npbst_.shape.push_back(output_dim_);
@@ -432,6 +456,8 @@ class DataDim
             }
             // H: PTMul
             case KernelType::PTMUL:
+            // H: HEADD
+            case KernelType::HEADD:
             case KernelType::KSKIP:
             case KernelType::TPROD:
             {
