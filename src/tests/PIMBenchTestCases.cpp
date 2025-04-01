@@ -46,14 +46,12 @@ TEST_F(PIMBenchFixture, add) {
 }
 
 TEST_F(PIMBenchFixture, kskip) {
-  // int num_pcus = 512;
-  int input_dim = (FHE_DNUM * FHE_N);
-  int input1_dim = (2 * FHE_DNUM * FHE_N);
-  int input2_dim = 1;
+  int A_dim = (FHE_DNUM * FHE_N);
+  int evk_dim = (2 * FHE_DNUM * FHE_N);
+  int C_dim = 1;
   int output_dim = (2 * FHE_N);
 
-
-  int input_total = input_dim + input1_dim + input2_dim;
+  int input_total = A_dim + evk_dim + C_dim;
 
   setPIMBenchTestCase(KernelType::KSKIP, output_dim, input_total);
   executeKernel();
@@ -61,7 +59,7 @@ TEST_F(PIMBenchFixture, kskip) {
   // expectPIMBench(2.0);
 }
 
-TEST_F(PIMBenchFixture, tensorprod) {
+TEST_F(PIMBenchFixture, tprod) {
   int input_dim = 2 * (2 * FHE_N);
   int output_dim = 3 * FHE_N;
 
