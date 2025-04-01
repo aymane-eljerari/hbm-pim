@@ -21,10 +21,12 @@
 
 using namespace DRAMSim;
 
-class PIMBenchTestCase {
+class PIMBenchTestCase
+{
 public:
   PIMBenchTestCase(KernelType k, unsigned b, unsigned out, unsigned in)
-      : kernel_type_(k), batch_(b), out_(out), in_(in) {
+      : kernel_type_(k), batch_(b), out_(out), in_(in)
+  {
     mem_ = make_shared<MultiChannelMemorySystem>(
         "ini/HBM2_samsung_2M_16B_x64.ini", "system_hbm_64ch.ini", ".",
         "example_app", 256 * 64 * 2);
@@ -37,7 +39,8 @@ public:
     dim_data_ = new DataDim(kernel_type_, batch_, out_, in_, false);
   }
 
-  virtual ~PIMBenchTestCase() {
+  virtual ~PIMBenchTestCase()
+  {
     mem_->printStats(true);
     pim_mem_->printStats(true);
     delete dim_data_;
@@ -45,8 +48,10 @@ public:
 
   virtual uint64_t measureCycle(bool is_pim_) = 0;
 
-  void run(shared_ptr<MultiChannelMemorySystem> mem_, uint64_t *cycle) {
-    while (mem_->hasPendingTransactions()) {
+  void run(shared_ptr<MultiChannelMemorySystem> mem_, uint64_t *cycle)
+  {
+    while (mem_->hasPendingTransactions())
+    {
       mem_->update();
       (*cycle)++;
     }
@@ -54,39 +59,60 @@ public:
 
   uint64_t genMemTraffic(shared_ptr<MultiChannelMemorySystem> mem_,
                          bool is_write, uint32_t data_size_in_bytes,
-                         uint64_t starting_addr) {
+                         uint64_t starting_addr)
+  {
     unsigned basic_stride = (getConfigParam(UINT, "JEDEC_DATA_BUS_BITS") *
                              getConfigParam(UINT, "BL") / 8);
     BurstType null_bst;
     uint64_t addr;
 
     for (addr = starting_addr; addr < starting_addr + data_size_in_bytes;
-         addr += basic_stride) {
+         addr += basic_stride)
+    {
       mem_->addTransaction(is_write, addr, &null_bst);
     }
     return addr;
   }
 
-  string kernelTypetoStr(KernelType k) {
-    if (k == KernelType::GEMV) {
+  string kernelTypetoStr(KernelType k)
+  {
+    if (k == KernelType::GEMV)
+    {
       return string{"GEMV"};
-    } else if (k == KernelType::MUL) {
-      return string{"MUL"};
-    } else if (k == KernelType::ADD) {
-      return string{"ADD"};
-    } else if (k == KernelType::KSKIP) {
-      return string{"KSKIP"};
-    } else if (k == KernelType::TPROD){
-      return string{"TPROD"};
     }
-     else if (k == KernelType::RELU) {
+    else if (k == KernelType::MUL)
+    {
+      return string{"MUL"};
+    }
+    else if (k == KernelType::ADD)
+    {
+      return string{"ADD"};
+    }
+    else if (k == KernelType::KSKIP)
+    {
+      return string{"KSKIP"};
+    }
+    else if (k == KernelType::TPROD)
+    {
+      return string{"TPROD"};
+      // H: PTMul
+    }
+    else if (k == KernelType::PTMUL)
+    {
+      return string{"PTMUL"};
+    }
+    else if (k == KernelType::RELU)
+    {
       return string{"RELU"};
-    } else {
+    }
+    else
+    {
       throw invalid_argument("Invalid kernel type");
     }
   }
 
-  void printTestMessage(bool is_pim_) {
+  void printTestMessage(bool is_pim_)
+  {
     cout << "  " << kernelTypetoStr(kernel_type_) << " (PIM "
          << (is_pim_ ? "enabled)" : "disabled)") << endl;
     dim_data_->printDim(kernel_type_);
@@ -104,21 +130,26 @@ protected:
   DataDim *dim_data_;
 };
 
-class GemvPIMBenchTest : public PIMBenchTestCase {
+class GemvPIMBenchTest : public PIMBenchTestCase
+{
 public:
   GemvPIMBenchTest(KernelType k, unsigned b, unsigned out, unsigned in)
       : PIMBenchTestCase(k, b, out, in) {}
 
-  uint64_t measureCycle(bool is_pim_) {
+  uint64_t measureCycle(bool is_pim_)
+  {
     uint64_t cycle = 0;
     uint64_t starting_addr = 0;
 
-    if (is_pim_ == true) {
+    if (is_pim_ == true)
+    {
       kernel_->executeGemv(&dim_data_->weight_npbst_, &dim_data_->input_npbst_,
                            false);
       kernel_->runPIM();
       cycle = kernel_->getCycle();
-    } else {
+    }
+    else
+    {
       uint32_t input_data_size_in_byte =
           dim_data_->getDataSize(dim_data_->input_dim_, dim_data_->batch_size_);
       uint32_t output_data_size_in_byte = dim_data_->getDataSize(
@@ -138,26 +169,32 @@ public:
   }
 };
 
-class EltPIMBenchTest : public PIMBenchTestCase {
+class EltPIMBenchTest : public PIMBenchTestCase
+{
 public:
   EltPIMBenchTest(KernelType k, unsigned b, unsigned out, unsigned in)
-      : PIMBenchTestCase(k, b, out, in) {
+      : PIMBenchTestCase(k, b, out, in)
+  {
     input_row0_ = 0;
     input_row1_ = 128;
     result_row_ = 256;
   }
 
-  uint64_t measureCycle(bool is_pim_ = false) {
+  uint64_t measureCycle(bool is_pim_ = false)
+  {
     uint64_t cycle = 0;
     uint64_t starting_addr = 0;
 
-    if (is_pim_ == true) {
+    if (is_pim_ == true)
+    {
       kernel_->executeEltwise(dim_data_->output_npbst_.getTotalDim(),
                               pimBankType::ALL_BANK, kernel_type_, input_row0_,
                               result_row_, input_row1_);
       kernel_->runPIM();
       cycle = kernel_->getCycle();
-    } else {
+    }
+    else
+    {
       uint32_t input_data_size_in_byte =
           dim_data_->getDataSize(dim_data_->input_dim_, dim_data_->batch_size_);
       uint32_t input1_data_size_in_byte =
@@ -183,10 +220,12 @@ private:
   unsigned result_row_;
 };
 
-class KSKIPPIMBenchTest : public PIMBenchTestCase {
+class KSKIPPIMBenchTest : public PIMBenchTestCase
+{
 public:
   KSKIPPIMBenchTest(KernelType k, unsigned b, unsigned out, unsigned in)
-      : PIMBenchTestCase(k, b, out, in) {
+      : PIMBenchTestCase(k, b, out, in)
+  {
     /*
       PIM Bank: 2^14 rows x 2^5 columns
       1 column -> 4x 64bit = 256 bit = 32 bytes
@@ -216,18 +255,22 @@ public:
     result_row_ = 10;
   }
 
-  uint64_t measureCycle(bool is_pim_ = false) {
+  uint64_t measureCycle(bool is_pim_ = false)
+  {
     uint64_t cycle = 0;
     uint64_t starting_addr = 0;
 
-    if (is_pim_ == true) {
+    if (is_pim_ == true)
+    {
       kernel_->executeKSKIP(dim_data_->output_npbst_.getTotalDim(),
                             pimBankType::ALL_BANK, kernel_type_, input_row0_,
                             result_row_, input_row1_, input_row2_);
 
       kernel_->runPIM();
       cycle = kernel_->getCycle();
-    } else {
+    }
+    else
+    {
       uint32_t input_data_size_in_byte =
           dim_data_->getDataSize(dim_data_->input_dim_, dim_data_->batch_size_);
 
@@ -262,10 +305,12 @@ private:
   unsigned result_row_;
 };
 
-class TPRODPIMBenchTest : public PIMBenchTestCase {
+class TPRODPIMBenchTest : public PIMBenchTestCase
+{
 public:
   TPRODPIMBenchTest(KernelType k, unsigned b, unsigned out, unsigned in)
-      : PIMBenchTestCase(k, b, out, in) {
+      : PIMBenchTestCase(k, b, out, in)
+  {
     /*
       PIM Bank: 2^14 rows x 2^5 columns
       1 column -> 4x 64bit = 256 bit = 32 bytes
@@ -289,18 +334,22 @@ public:
     result_row_ = 4;
   }
 
-  uint64_t measureCycle(bool is_pim_ = false) {
+  uint64_t measureCycle(bool is_pim_ = false)
+  {
     uint64_t cycle = 0;
     uint64_t starting_addr = 0;
 
-    if (is_pim_ == true) {
+    if (is_pim_ == true)
+    {
       kernel_->executeKSKIP(dim_data_->output_npbst_.getTotalDim(),
                             pimBankType::ALL_BANK, kernel_type_, input_row0_,
                             result_row_, input_row1_, input_row2_);
 
       kernel_->runPIM();
       cycle = kernel_->getCycle();
-    } else {
+    }
+    else
+    {
       uint32_t input_data_size_in_byte =
           dim_data_->getDataSize(dim_data_->input_dim_, dim_data_->batch_size_);
 
@@ -335,25 +384,31 @@ private:
   unsigned result_row_;
 };
 
-class ActPIMBenchTest : public PIMBenchTestCase {
+class ActPIMBenchTest : public PIMBenchTestCase
+{
 public:
   ActPIMBenchTest(KernelType k, unsigned b, unsigned out, unsigned in)
-      : PIMBenchTestCase(k, b, out, in) {
+      : PIMBenchTestCase(k, b, out, in)
+  {
     input_row0_ = 0;
     result_row_ = 256;
   }
 
-  uint64_t measureCycle(bool is_pim_ = false) {
+  uint64_t measureCycle(bool is_pim_ = false)
+  {
     uint64_t cycle = 0;
     uint64_t starting_addr = 0;
 
-    if (is_pim_ == true) {
+    if (is_pim_ == true)
+    {
       kernel_->executeEltwise(dim_data_->output_npbst_.getTotalDim(),
                               pimBankType::ALL_BANK, KernelType::RELU,
                               input_row0_, result_row_, 0);
       kernel_->runPIM();
       cycle = kernel_->getCycle();
-    } else {
+    }
+    else
+    {
       uint32_t input_data_size_in_byte =
           dim_data_->getDataSize(dim_data_->input_dim_, dim_data_->batch_size_);
       uint32_t output_data_size_in_byte = dim_data_->getDataSize(
@@ -374,57 +429,156 @@ private:
   unsigned result_row_;
 };
 
-class PIMBenchFixture : public testing::Test {
+// H: PTMul
+//! Is this right or do I need to split A into A[0] amd A[1]
+class PTMulPIMBenchTest : public PIMBenchTestCase
+{
 public:
-  virtual void SetUp() {
+  PTMulPIMBenchTest(KernelType k, unsigned b, unsigned out, unsigned in)
+      : PIMBenchTestCase(k, b, out, in)
+  {
+    /*
+    512 PIM Banks
+    1 coeff = 64 bits = 8 bytes
+
+    PIM Bank: 2^14 rows x 2^5 columns
+    1 column -> 4x 64bit = 256 bit = 32 bytes
+    1 row -> 32 columns * 32 bytes per colum = 1024 bytes
+
+    1 limb PTMul
+    inputA: (2, 2^16)
+    inputB: (1, 2^16)
+    output: (2, 2^16)
+
+    per PCU
+    inputA: (2 * 2^16)/512 = 256 coeff (2048 bytes = 2 rows)
+    inputB: (1 * 2^16)/512 = 128 coeff (1024 bytes = 1 row)
+    output: (2 * 2^16)/512 = 256 coeff (2048 bytes = 2 rows)
+    */
+   // A
+   input_row0_ = 0;
+   // B
+   input_row1_ = 2;
+   // output
+   result_row_ = 3;
+
+
+  }
+
+  uint64_t measureCycle(bool is_pim_ = false)
+  {
+    uint64_t cycle = 0;
+    uint64_t starting_addr = 0;
+
+    if (is_pim_ == true)
+    {
+      kernel_->executePTMul(dim_data_->output_npbst_.getTotalDim(), pimBankType::ALL_BANK,
+                            kernel_type_, input_row0_, result_row_, input_row1_);
+      kernel_->runPIM();
+      cycle = kernel_->getCycle();
+    }
+    else
+    {
+      // TODO: This is directly copied from KSK
+      uint32_t input_data_size_in_byte =
+          dim_data_->getDataSize(dim_data_->input_dim_, dim_data_->batch_size_);
+
+      uint32_t output_data_size_in_byte = dim_data_->getDataSize(
+          dim_data_->output_dim_, dim_data_->batch_size_);
+
+      starting_addr =
+          genMemTraffic(mem_, false, input_data_size_in_byte, starting_addr);
+
+      run(mem_, &cycle);
+
+      genMemTraffic(mem_, true, output_data_size_in_byte,
+                    starting_addr); // result-vec
+      run(mem_, &cycle);
+    }
+    return cycle;
+  }
+
+private:
+  // for PIM
+  unsigned input_row0_;
+  unsigned input_row1_;
+  unsigned result_row_;
+};
+
+class PIMBenchFixture : public testing::Test
+{
+public:
+  virtual void SetUp()
+  {
     pim_cycle_ = 0;
     non_pim_cycle_ = 0;
     perfTest = nullptr;
     printTestMessage();
   }
 
-  virtual void TearDown() {
+  virtual void TearDown()
+  {
     printResult(non_pim_cycle_ / static_cast<float>(pim_cycle_));
     delete perfTest;
   }
 
   void setPIMBenchTestCase(KernelType k, unsigned out, unsigned in,
-                           unsigned batch = 1) {
-    if (k == KernelType::GEMV) {
+                           unsigned batch = 1)
+  {
+    if (k == KernelType::GEMV)
+    {
       perfTest = new GemvPIMBenchTest(k, batch, out, in);
-    } else if (k == KernelType::MUL || k == KernelType::ADD) {
+    }
+    else if (k == KernelType::MUL || k == KernelType::ADD)
+    {
       perfTest = new EltPIMBenchTest(k, batch, out, in);
-    } else if (k == KernelType::KSKIP) {
+    }
+    else if (k == KernelType::KSKIP)
+    {
       perfTest = new KSKIPPIMBenchTest(k, batch, out, in);
-    } else if (k == KernelType::TPROD) {
+    }
+    else if (k == KernelType::TPROD)
+    {
       perfTest = new TPRODPIMBenchTest(k, batch, out, in);
-    } else if (k == KernelType::RELU) {
+    }
+    else if (k == KernelType::RELU)
+    {
       perfTest = new ActPIMBenchTest(k, batch, out, in);
-    } else {
+    }
+    else if (k == KernelType::PTMUL)
+    {
+      perfTest = new PTMulPIMBenchTest(k, batch, out, in);
+    }
+    else
+    {
       throw invalid_argument("Invalid kernel type");
     }
   }
 
-  void executePIMKernel(void) {
+  void executePIMKernel(void)
+  {
     perfTest->printTestMessage(true);
     pim_cycle_ = perfTest->measureCycle(true);
     printStats(pim_cycle_);
   }
 
-  void executeKernel(void) {
+  void executeKernel(void)
+  {
     perfTest->printTestMessage(false);
     non_pim_cycle_ = perfTest->measureCycle(false);
     printStats(non_pim_cycle_);
   }
 
-  void expectPIMBench(float expected_perf_gain) {
+  void expectPIMBench(float expected_perf_gain)
+  {
     EXPECT_TRUE((float)non_pim_cycle_ / pim_cycle_ > expected_perf_gain)
         << (float)non_pim_cycle_ / pim_cycle_ << endl;
   }
 
   void printTestMessage() { cout << ">>Performance Test" << endl; }
 
-  void printStats(uint64_t cycle) {
+  void printStats(uint64_t cycle)
+  {
     cout << "> Test Results " << endl;
     cout << "> Cycle : " << cycle << endl;
     cout << endl;

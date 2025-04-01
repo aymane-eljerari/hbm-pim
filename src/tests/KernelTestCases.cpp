@@ -142,3 +142,12 @@ TEST_F(PIMKernelFixture, relu)
     delete[] result_;
     delete dim_data;
 }
+
+
+// H: PTMul
+// // Currently copied from "mul"
+// // Idk if I actually need this, is this just for numbers?
+TEST_F(PIMKernelFixture, ptmul)
+{
+    // Empty
+}

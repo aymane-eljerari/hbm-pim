@@ -238,6 +238,23 @@ class DataDim
 
                 return;
             }
+            case KernelType::PTMUL:
+            {
+                // input_npbst_.loadFp16("data/mul/eltmul_input0_" + input_dim_str + ".npy");
+                // input1_npbst_.loadFp16("data/mul/eltmul_input1_" + input_dim_str + ".npy");
+                // output_npbst_.loadFp16("data/mul/eltmul_output_" + input_dim_str + ".npy");
+
+                input_npbst_.loadint64("data/mul/eltmul_output_u64_" + input_dim_str + ".npy");
+                input1_npbst_.loadint64("data/mul/eltmul_output_u64_" + input_dim_str + ".npy");
+                output_npbst_.loadint64("data/mul/eltmul_output_u64_" + input_dim_str + ".npy");
+
+
+                output_dim_ = bShape1ToDim(output_npbst_.getTotalDim());
+                input_dim_ = bShape1ToDim(input_npbst_.getTotalDim());
+                input1_dim_ = bShape1ToDim(input1_npbst_.getTotalDim());
+
+                return;
+            }
             default:
             {
                 ERROR("== Error - Unknown KernelType trying to load data");
@@ -292,6 +309,21 @@ class DataDim
                 input_npbst_.shape.push_back(input_dim_);
                 input_npbst_.shape.push_back(input_dim_);
                 input_npbst_.loadTobShape(4);
+
+                output_npbst_.shape.push_back(batch_size_);
+                output_npbst_.shape.push_back(output_dim_);
+                output_npbst_.loadTobShape(4);
+
+                return;
+            }
+            // H: PTMul
+            // Not sure about this
+            case KernelType::PTMUL:
+            {
+                input_npbst_.shape.push_back(batch_size_);
+                input_npbst_.shape.push_back(input_dim_); // A
+                input_npbst_.shape.push_back(input_dim_); // B
+                input_npbst_.loadTobShape(4); // Im guessing this is 64-bit
 
                 output_npbst_.shape.push_back(batch_size_);
                 output_npbst_.shape.push_back(output_dim_);
@@ -398,6 +430,8 @@ class DataDim
                 cout << "  Input/output data dimension : " << output_dim_ << endl;
                 break;
             }
+            // H: PTMul
+            case KernelType::PTMUL:
             case KernelType::KSKIP:
             case KernelType::TPROD:
             {

@@ -21,35 +21,38 @@ vector<PIMCmd> PIMCmdGen::getPIMCmds(KernelType ktype, int num_jump_to_be_taken,
     unique_ptr<IPIMCmd> pim_kernel = nullptr;
     switch (ktype)
     {
-        /*
-        case KernelType::BN:
-            pim_kernel = make_unique<BatchNormPIMKernel>(ktype);
-            break;
-        */
-        case KernelType::RELU:
-            pim_kernel = make_unique<ActPIMKernel>(ktype);
-            break;
-        case KernelType::MUL:
-            pim_kernel = make_unique<EltwisePIMKernel>(ktype);
-            break;
-        case KernelType::ADD:
-            pim_kernel = make_unique<EltwisePIMKernel>(ktype);
-            break;
-        case KernelType::KSKIP:
-            pim_kernel = make_unique<KSKIPPIMKernel>(ktype);
-            break;
-        case KernelType::TPROD:
-          pim_kernel = make_unique<KSKIPPIMKernel>(ktype);
-          break;
-
-        case KernelType::GEMV:
-            pim_kernel = make_unique<GemvPIMKernel>(ktype);
-            break;
-        case KernelType::GEMVTREE:
-            pim_kernel = make_unique<GemvPIMKernel>(ktype);
-            break;
-        default:
-            throw invalid_argument("Invalid kernel type");
+    /*
+    case KernelType::BN:
+        pim_kernel = make_unique<BatchNormPIMKernel>(ktype);
+        break;
+    */
+    case KernelType::RELU:
+        pim_kernel = make_unique<ActPIMKernel>(ktype);
+        break;
+    case KernelType::MUL:
+        pim_kernel = make_unique<EltwisePIMKernel>(ktype);
+        break;
+    case KernelType::ADD:
+        pim_kernel = make_unique<EltwisePIMKernel>(ktype);
+        break;
+    case KernelType::KSKIP:
+        pim_kernel = make_unique<KSKIPPIMKernel>(ktype);
+        break;
+    case KernelType::TPROD:
+        pim_kernel = make_unique<KSKIPPIMKernel>(ktype);
+        break;
+    case KernelType::GEMV:
+        pim_kernel = make_unique<GemvPIMKernel>(ktype);
+        break;
+    case KernelType::GEMVTREE:
+        pim_kernel = make_unique<GemvPIMKernel>(ktype);
+        break;
+        // H: PTMul
+    case KernelType::PTMUL:
+        pim_kernel = make_unique<PTMulPIMKernel>(ktype);
+        break;
+    default:
+        throw invalid_argument("Invalid kernel type");
     }
     return pim_kernel->generateKernel(num_jump_to_be_taken, num_jump_to_be_taken_odd_bank,
                                       num_jump_to_be_taken_even_bank);

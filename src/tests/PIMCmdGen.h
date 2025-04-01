@@ -215,6 +215,68 @@ public:
   }
 };
 
+// H: PTMul
+class PTMulPIMKernel : public IPIMCmd
+{
+  public:
+    PTMulPIMKernel(KernelType ktype) : IPIMCmd(ktype) {}
+    virtual vector<PIMCmd> generateKernel(int num_jump_to_be_taken,
+                                          int num_jump_to_be_taken_odd_bank = 0,
+                                          int num_jump_to_be_taken_even_bank = 0) override    
+    {
+        vector<PIMCmd> pim_cmds;
+        PIMCmdType pimType = getPIMCmdType();
+        // vector<PIMCmd> tmp_cmds{
+        //     // TODO: This isnt completely correct but I reckon it's pretty close
+        //     // 1 fetch = 256bit
+
+        //     // Load 4x 64-bit coefficients from A[0] into GRF_A
+        //     PIMCmd(PIMCmdType::FILL, PIMOpdType::GRF_A, PIMOpdType::EVEN_BANK),
+        //     // Load 4x 64-bit coefficients from A[1] into GRF_B
+        //     PIMCmd(PIMCmdType::FILL, PIMOpdType::GRF_B, PIMOpdType::EVEN_BANK),
+        //     // GRF_A = GRF_A * EVEN_BANK
+        //     // TODO: Not sure what that "1" is
+        //     PIMCmd(PIMCmdType::MUL, PIMOpdType::GRF_A, PIMOpdType::GRF_A, PIMOpdType::EVEN_BANK, 1),
+        //     // GRF_B = GRF_B * EVEN_BANK,
+        //     // GRF B is in odd bank, change to GRF A
+        //     PIMCmd(PIMCmdType::MUL, PIMOpdType::GRF_B, PIMOpdType::GRF_B, PIMOpdType::EVEN_BANK, 1),
+            
+        //     // 4 ALUs, output is 2x(2^16) = 2^17 64-bit values
+        //     // 2^17 / 4 = 2^15 = 32768 / 512 PCUs = 64 jumps
+        //     // Jumping back 4 operations, up to op 1
+        //     PIMCmd(PIMCmdType::JUMP, 32768, 4)
+        // };
+
+        vector<PIMCmd> tmp_cmds{
+            // Load 4x 64-bit coefficients from B into GRF_A
+            PIMCmd(PIMCmdType::FILL, PIMOpdType::GRF_A, PIMOpdType::EVEN_BANK),
+            // GRF_A = GRF_A * A[0] (in even bank)
+            PIMCmd(PIMCmdType::MUL, PIMOpdType::GRF_A, PIMOpdType::GRF_A, PIMOpdType::EVEN_BANK, 1),
+            PIMCmd(PIMCmdType::MUL, PIMOpdType::GRF_A, PIMOpdType::GRF_A, PIMOpdType::EVEN_BANK, 1),
+            // PIMCmd(PIMCmdType::JUMP, 64, 4)
+
+        };
+
+        pim_cmds.assign(tmp_cmds.begin(), tmp_cmds.end());
+        if (num_jump_to_be_taken != 0) {
+          pim_cmds.push_back(
+              PIMCmd(PIMCmdType::JUMP, num_jump_to_be_taken, pim_cmds.size() + 1));
+        }        pim_cmds.push_back(PIMCmd(PIMCmdType::EXIT, 0));
+        return pim_cmds;
+    }
+
+  private:
+    PIMCmdType getPIMCmdType()
+    {
+        if (kernelType == KernelType::ADD)
+            return PIMCmdType::ADD;
+        else if (kernelType == KernelType::MUL)
+            return PIMCmdType::MUL;
+        else
+            throw invalid_argument("Not supported element-wise operation");
+    }
+};
+
 class PIMCmdGen {
 public:
   static vector<PIMCmd> getPIMCmds(KernelType ktype, int num_jump_to_be_taken,

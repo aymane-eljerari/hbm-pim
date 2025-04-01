@@ -23,7 +23,8 @@
 
 using namespace DRAMSim;
 
-TEST_F(PIMBenchFixture, gemv) {
+TEST_F(PIMBenchFixture, gemv)
+{
   setPIMBenchTestCase(KernelType::GEMV, 4096,
                       4096); // (KernelType, out_vec, in_vec)
   executeKernel();           // execute w/o PIM
@@ -31,27 +32,29 @@ TEST_F(PIMBenchFixture, gemv) {
   expectPIMBench(2.0);
 }
 
-TEST_F(PIMBenchFixture, mul) {
+TEST_F(PIMBenchFixture, mul)
+{
   setPIMBenchTestCase(KernelType::MUL, 2 * 1024 * 1024, 2 * 1024 * 1024);
   executeKernel();
   executePIMKernel();
   expectPIMBench(2.0);
 }
 
-TEST_F(PIMBenchFixture, add) {
+TEST_F(PIMBenchFixture, add)
+{
   setPIMBenchTestCase(KernelType::ADD, 1024 * 1024, 1024 * 1024);
   executeKernel();
   executePIMKernel();
   expectPIMBench(2.0);
 }
 
-TEST_F(PIMBenchFixture, kskip) {
+TEST_F(PIMBenchFixture, kskip)
+{
   // int num_pcus = 512;
   int input_dim = (FHE_DNUM * FHE_N);
   int input1_dim = (2 * FHE_DNUM * FHE_N);
   int input2_dim = 1;
   int output_dim = (2 * FHE_N);
-
 
   int input_total = input_dim + input1_dim + input2_dim;
 
@@ -61,7 +64,8 @@ TEST_F(PIMBenchFixture, kskip) {
   // expectPIMBench(2.0);
 }
 
-TEST_F(PIMBenchFixture, tensorprod) {
+TEST_F(PIMBenchFixture, tensorprod)
+{
   int input_dim = 2 * (2 * FHE_N);
   int output_dim = 3 * FHE_N;
 
@@ -70,9 +74,20 @@ TEST_F(PIMBenchFixture, tensorprod) {
   executePIMKernel();
 }
 
-TEST_F(PIMBenchFixture, relu) {
+TEST_F(PIMBenchFixture, relu)
+{
   setPIMBenchTestCase(KernelType::RELU, 4 * 1024 * 1024, 4 * 1024 * 1024);
   executeKernel();
   executePIMKernel();
   expectPIMBench(2.0);
+}
+
+// H: PTMul
+TEST_F(PIMBenchFixture, ptmul)
+{
+  int input_dim = 3 * FHE_N; // 2A + B
+  int output_dim = 2 * FHE_N; // 2O
+  setPIMBenchTestCase(KernelType::PTMUL, output_dim, input_dim); // (KernelType, out_vec, in_vec)
+  executeKernel();
+  executePIMKernel();
 }

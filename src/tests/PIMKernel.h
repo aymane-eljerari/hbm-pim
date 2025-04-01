@@ -118,7 +118,10 @@ public:
                     int input1_row);
   void computeRelu(int numTile, int input0Row, int resultRow);
   // void computeBn(int numTile, int input0Row, int resultRow);
-
+  // H: PTMul
+  void computePTMul(int num_tile, int input0_row, int result_row, int input1_row);
+  void executePTMul(int dim, pimBankType pb_type, KernelType ktype, int input0_row,
+    int result_row, int input1_row);
   void readResult(BurstType *resultBst, pimBankType bank_types, int output_dim,
                   uint64_t baseAddr = 0, unsigned startingRow = 0,
                   unsigned startingCol = 0);

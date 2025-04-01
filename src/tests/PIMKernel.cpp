@@ -19,8 +19,10 @@
 #include "AddressMapping.h"
 #include "tests/PIMCmdGen.h"
 
-void PIMKernel::runPIM() {
-  while (mem_->hasPendingTransactions()) {
+void PIMKernel::runPIM()
+{
+  while (mem_->hasPendingTransactions())
+  {
     cycle_++;
     mem_->update();
   }
@@ -28,13 +30,18 @@ void PIMKernel::runPIM() {
 
 uint64_t PIMKernel::getCycle() { return cycle_; }
 
-void PIMKernel::parkIn() {
+void PIMKernel::parkIn()
+{
   addBarrier();
-  for (int &ch_idx : pim_chans_) {
-    for (int &ra_idx : pim_ranks_) {
+  for (int &ch_idx : pim_chans_)
+  {
+    for (int &ra_idx : pim_ranks_)
+    {
       for (int bank_idx = 0; bank_idx < num_banks_ / num_bank_groups_;
-           bank_idx++) {
-        for (int bg_idx = 0; bg_idx < num_bank_groups_; bg_idx++) {
+           bank_idx++)
+      {
+        for (int bg_idx = 0; bg_idx < num_bank_groups_; bg_idx++)
+        {
           string str = "PARK_IN_";
           if (bg_idx == 0 && bank_idx == 0)
             str = "START_" + str;
@@ -51,12 +58,17 @@ void PIMKernel::parkIn() {
   addBarrier();
 }
 
-void PIMKernel::parkOut() {
-  for (int &ch_idx : pim_chans_) {
-    for (int &ra_idx : pim_ranks_) {
+void PIMKernel::parkOut()
+{
+  for (int &ch_idx : pim_chans_)
+  {
+    for (int &ra_idx : pim_ranks_)
+    {
       for (int bank_idx = 0; bank_idx < num_banks_ / num_bank_groups_;
-           bank_idx++) {
-        for (int bg_idx = 0; bg_idx < num_bank_groups_; bg_idx++) {
+           bank_idx++)
+      {
+        for (int bg_idx = 0; bg_idx < num_bank_groups_; bg_idx++)
+        {
           string str = "PARK_OUT_";
           if (bg_idx == 0 && bank_idx == 0)
             str = "START_" + str;
@@ -76,12 +88,15 @@ void PIMKernel::parkOut() {
 void PIMKernel::addTransactionAll(bool is_write, int bg_idx, int bank_idx,
                                   int row, int col, const string tag,
                                   BurstType *bst, bool use_barrier,
-                                  int num_loop) {
+                                  int num_loop)
+{
   for (int &ch_idx : pim_chans_)
-    for (int &ra_idx : pim_ranks_) {
+    for (int &ra_idx : pim_ranks_)
+    {
       unsigned local_row = row;
       unsigned local_col = col;
-      for (int i = 0; i < num_loop; i++) {
+      for (int i = 0; i < num_loop; i++)
+      {
         uint64_t addr = pim_addr_mgr_->addrGenSafe(
             ch_idx, ra_idx, bg_idx, bank_idx, local_row, local_col);
         (tag != "") ? mem_->addTransaction(is_write, addr, tag, bst)
@@ -96,36 +111,47 @@ void PIMKernel::addTransactionAll(bool is_write, int bg_idx, int bank_idx,
 
 void PIMKernel::addTransactionAll(bool is_write, int bg_idx, int bank_idx,
                                   int row, int col, BurstType *bst,
-                                  bool use_barrier, int num_loop) {
+                                  bool use_barrier, int num_loop)
+{
   addTransactionAll(is_write, bg_idx, bank_idx, row, col, "", bst, use_barrier,
                     num_loop);
 }
 
-void PIMKernel::addBarrier() {
+void PIMKernel::addBarrier()
+{
   for (int &ch_idx : pim_chans_)
     mem_->addBarrier(ch_idx);
 }
 
-void PIMKernel::changePIMMode(dramMode curMode, dramMode nextMode) {
-  if (curMode == dramMode::SB && nextMode == dramMode::HAB) {
+void PIMKernel::changePIMMode(dramMode curMode, dramMode nextMode)
+{
+  if (curMode == dramMode::SB && nextMode == dramMode::HAB)
+  {
     addTransactionAll(true, 0, 0, pim_abmr_ra, 0x1f, "START_SB_TO_HAB_",
                       &null_bst_);
     addTransactionAll(true, 0, 1, pim_abmr_ra, 0x1f, &null_bst_);
-    if (num_banks_ >= 2) {
+    if (num_banks_ >= 2)
+    {
       addTransactionAll(true, 2, 0, pim_abmr_ra, 0x1f, &null_bst_);
       addTransactionAll(true, 2, 1, pim_abmr_ra, 0x1f, "END_SB_TO_HAB_",
                         &null_bst_);
     }
-  } else if (curMode == dramMode::HAB) {
-    if (nextMode == dramMode::SB) {
+  }
+  else if (curMode == dramMode::HAB)
+  {
+    if (nextMode == dramMode::SB)
+    {
       addTransactionAll(true, 0, 0, pim_sbmr_ra, 0x1f, "START_HAB_TO_SB",
                         &null_bst_);
       addTransactionAll(true, 0, 1, pim_sbmr_ra, 0x1f, "END_HAB_TO_SB",
                         &null_bst_);
-    } else if (nextMode == dramMode::HAB_PIM) {
+    }
+    else if (nextMode == dramMode::HAB_PIM)
+    {
       addTransactionAll(true, 0, 0, pim_reg_ra, 0x0, "PIM", &bst_hab_pim_);
     }
-  } else if (curMode == dramMode::HAB_PIM && nextMode == dramMode::HAB)
+  }
+  else if (curMode == dramMode::HAB_PIM && nextMode == dramMode::HAB)
     addTransactionAll(true, 0, 0, pim_reg_ra, 0x0, "PIM", &bst_hab_);
 
   addBarrier();
@@ -200,15 +226,18 @@ void PIMKernel::programSrf()
 }
 */
 
-void PIMKernel::programCrf(vector<PIMCmd> &cmds) {
+void PIMKernel::programCrf(vector<PIMCmd> &cmds)
+{
   PIMCmd nop_cmd(PIMCmdType::NOP, 0);
-  for (int i = 0; i < 4; i++) {
+  for (int i = 0; i < 4; i++)
+  {
     if (i * 8 >= cmds.size())
       break;
     crf_bst_[i].set(nop_cmd.toInt(), nop_cmd.toInt(), nop_cmd.toInt(),
                     nop_cmd.toInt(), nop_cmd.toInt(), nop_cmd.toInt(),
                     nop_cmd.toInt(), nop_cmd.toInt());
-    for (int j = 0; j < 8; j++) {
+    for (int j = 0; j < 8; j++)
+    {
       if (i * 8 + j >= cmds.size())
         break;
       crf_bst_[i].u32Data_[j] = cmds[i * 8 + j].toInt();
@@ -226,14 +255,16 @@ void PIMKernel::programCrf(vector<PIMCmd> &cmds) {
 }
 
 void PIMKernel::setControl(BurstType *bst, bool pim_op, int crf_toggle_cond,
-                           bool grfA_zero, bool grfB_zero) {
+                           bool grfA_zero, bool grfB_zero)
+{
   bst->u8Data_[0] = pim_op;
   bst->u8Data_[16] = crf_toggle_cond;
   bst->u8Data_[20] = grfA_zero;
   bst->u8Data_[21] = grfB_zero;
 }
 
-unsigned PIMKernel::getResultColGemv(int input_dim, int output_dim) {
+unsigned PIMKernel::getResultColGemv(int input_dim, int output_dim)
+{
   int num_output_tiles =
       ceil(((double)output_dim / (num_total_pim_blocks_)) / num_grfB_);
   int num_input_tiles = ceil((double)input_dim / (double)num_grfA_);
@@ -244,17 +275,22 @@ unsigned PIMKernel::getResultColGemv(int input_dim, int output_dim) {
 void PIMKernel::changeBank(pimBankType pb_type, int &ch_idx, int &ra_idx,
                            int &bg_idx, int &bank_idx, unsigned &starting_row,
                            unsigned &starting_col, unsigned &row,
-                           unsigned &col) {
+                           unsigned &col)
+{
   bank_idx +=
       (pb_type == pimBankType::ALL_BANK) ? 1 : (num_banks_ / num_pim_blocks_);
 
-  if (bank_idx >= (num_banks_ / num_bank_groups_)) {
+  if (bank_idx >= (num_banks_ / num_bank_groups_))
+  {
     bank_idx = 0;
-    if (++bg_idx >= num_bank_groups_) {
+    if (++bg_idx >= num_bank_groups_)
+    {
       bg_idx = 0;
-      if (++ra_idx >= num_pim_ranks_) {
+      if (++ra_idx >= num_pim_ranks_)
+      {
         ra_idx = 0;
-        if (++ch_idx >= num_pim_chans_) {
+        if (++ch_idx >= num_pim_chans_)
+        {
           ch_idx = 0;
           starting_row = row;
           starting_col = col;
@@ -265,7 +301,8 @@ void PIMKernel::changeBank(pimBankType pb_type, int &ch_idx, int &ra_idx,
 }
 
 void PIMKernel::preloadGemv(NumpyBurstType *operand, unsigned starting_row,
-                            unsigned starting_col) {
+                            unsigned starting_col)
+{
   int input_tile_size = num_grfA_;
   int output_tile_size = num_grfB_ * num_total_pim_blocks_;
 
@@ -276,16 +313,21 @@ void PIMKernel::preloadGemv(NumpyBurstType *operand, unsigned starting_row,
   unsigned even_starting_row = starting_row, odd_starting_row = starting_row;
   unsigned even_starting_col = starting_col, odd_starting_col = starting_col;
 
-  for (int y = 0; y < operand->bShape[0]; y += output_tile_size) {
-    for (int x = 0; x < operand->bShape[1]; x += input_tile_size) {
+  for (int y = 0; y < operand->bShape[0]; y += output_tile_size)
+  {
+    for (int x = 0; x < operand->bShape[1]; x += input_tile_size)
+    {
       bool is_odd = ((x / input_tile_size) % 2 == 1) ? true : false;
 
-      for (int tiled_y = 0; tiled_y < output_tile_size; tiled_y += num_grfB_) {
+      for (int tiled_y = 0; tiled_y < output_tile_size; tiled_y += num_grfB_)
+      {
         row = (is_odd) ? odd_starting_row : even_starting_row;
         col = (is_odd) ? odd_starting_col : even_starting_col;
 
-        for (int grfb_idx = 0; grfb_idx < num_grfB_; grfb_idx++) {
-          for (int grfa_idx = 0; grfa_idx < num_grfA_; grfa_idx++, col++) {
+        for (int grfb_idx = 0; grfb_idx < num_grfB_; grfb_idx++)
+        {
+          for (int grfa_idx = 0; grfa_idx < num_grfA_; grfa_idx++, col++)
+          {
             addr = pim_addr_mgr_->addrGenSafe(ch_idx, ra_idx, bg_idx,
                                               bank_idx + is_odd, row, col);
             int d_idx =
@@ -306,11 +348,13 @@ void PIMKernel::preloadGemv(NumpyBurstType *operand, unsigned starting_row,
 
 void PIMKernel::preloadNoReplacement(NumpyBurstType *operand,
                                      unsigned starting_row,
-                                     unsigned starting_col) {
+                                     unsigned starting_col)
+{
   uint64_t init_addr =
       pim_addr_mgr_->addrGenSafe(0, 0, 0, 0, starting_row, starting_col);
 
-  for (int x = 0; x < operand->getTotalDim(); x++) {
+  for (int x = 0; x < operand->getTotalDim(); x++)
+  {
     uint64_t addr = init_addr + x * transaction_size_;
     mem_->addTransaction(true, addr, &operand->bData[x]);
   }
@@ -344,18 +388,24 @@ starting_col, row, col);
 }
 */
 void PIMKernel::executeGemv(NumpyBurstType *w_data, NumpyBurstType *i_data,
-                            bool is_tree) {
+                            bool is_tree)
+{
   int num_output_tiles =
       ceil(((double)w_data->bShape[0] / (num_total_pim_blocks_)) / num_grfB_);
   int num_input_tiles = ceil((double)w_data->bShape[1] / (double)num_grfA_);
   int num_batch = i_data->bShape[0];
   int zero_row = 1000;
 
-  if (is_tree) {
-    for (int ch = 0; ch < num_pim_chans_; ch++) {
-      for (int bg_idx = 0; bg_idx < num_bank_groups_; bg_idx++) {
-        for (int ba = 0; ba < num_banks_ / num_bank_groups_; ba++) {
-          for (int ca = 0; ca < num_grfA_; ca++) {
+  if (is_tree)
+  {
+    for (int ch = 0; ch < num_pim_chans_; ch++)
+    {
+      for (int bg_idx = 0; bg_idx < num_bank_groups_; bg_idx++)
+      {
+        for (int ba = 0; ba < num_banks_ / num_bank_groups_; ba++)
+        {
+          for (int ca = 0; ca < num_grfA_; ca++)
+          {
             uint64_t addr =
                 pim_addr_mgr_->addrGen(ch, 0, bg_idx, ba, zero_row, ca);
             mem_->addTransaction(true, addr, &null_bst_);
@@ -366,10 +416,13 @@ void PIMKernel::executeGemv(NumpyBurstType *w_data, NumpyBurstType *i_data,
   }
 
   vector<PIMCmd> pim_cmds;
-  if (is_tree) {
+  if (is_tree)
+  {
     int num_jump = ceil((double)num_input_tiles / 2) - 1;
     pim_cmds = PIMCmdGen::getPIMCmds(KernelType::GEMVTREE, num_jump, 0, 0);
-  } else {
+  }
+  else
+  {
     int num_jump_of_even_bank =
         num_grfB_ * ceil((double)num_input_tiles / 2) - 1;
     int num_jump_of_odd_bank = num_grfB_ * floor(num_input_tiles / 2) - 1;
@@ -381,14 +434,18 @@ void PIMKernel::executeGemv(NumpyBurstType *w_data, NumpyBurstType *i_data,
   changePIMMode(dramMode::SB, dramMode::HAB);
   programCrf(pim_cmds);
 
-  for (int j = 0; j < num_output_tiles; j++) {
-    for (int b = 0; b < num_batch; b++) {
+  for (int j = 0; j < num_output_tiles; j++)
+  {
+    for (int b = 0; b < num_batch; b++)
+    {
       changePIMMode(dramMode::HAB, dramMode::HAB_PIM); // PC reset.
 
       int col = num_output_tiles * num_input_tiles / 2 * num_grfA_ * num_grfB_ +
                 (j + b) * num_grfB_;
-      if (is_tree) {
-        for (int i = 0; i < num_input_tiles; i++, col += num_grfB_) {
+      if (is_tree)
+      {
+        for (int i = 0; i < num_input_tiles; i++, col += num_grfB_)
+        {
           computeGemv(i_data, num_input_tiles, num_output_tiles, i, j, b,
                       (i % 2 == 0) ? pimBankType::EVEN_BANK
                                    : pimBankType::ODD_BANK);
@@ -397,7 +454,9 @@ void PIMKernel::executeGemv(NumpyBurstType *w_data, NumpyBurstType *i_data,
           addTransactionAll(false, 0, 0, zero_row, 0, "RESET_GRF_B", &null_bst_,
                             true, num_grfB_);
         }
-      } else {
+      }
+      else
+      {
         for (int i = 0; i < num_input_tiles; i += 2)
           computeGemv(i_data, num_input_tiles, num_output_tiles, i, j, b,
                       pimBankType::EVEN_BANK);
@@ -416,11 +475,15 @@ void PIMKernel::executeGemv(NumpyBurstType *w_data, NumpyBurstType *i_data,
 
 void PIMKernel::computeGemv(NumpyBurstType *data, int num_input_tiles,
                             int num_output_tiles, int inputTile, int outputTile,
-                            int batchIdx, pimBankType pb_type) {
-  for (int ch_idx = 0; ch_idx < num_pim_chans_; ch_idx++) {
-    for (int ra_idx = 0; ra_idx < num_pim_ranks_; ra_idx++) {
+                            int batchIdx, pimBankType pb_type)
+{
+  for (int ch_idx = 0; ch_idx < num_pim_chans_; ch_idx++)
+  {
+    for (int ra_idx = 0; ra_idx < num_pim_ranks_; ra_idx++)
+    {
       // input upload to GRF
-      for (int gidx = 0; gidx < num_grfA_; gidx++) {
+      for (int gidx = 0; gidx < num_grfA_; gidx++)
+      {
         string str = "WRIO_TO_GRF_";
         uint64_t addr = pim_addr_mgr_->addrGen(ch_idx, ra_idx, 0, 1, pim_reg_ra,
                                                0x8 + gidx);
@@ -443,7 +506,8 @@ void PIMKernel::computeGemv(NumpyBurstType *data, int num_input_tiles,
 
 void PIMKernel::readResult(BurstType *resultBst, pimBankType pb_type,
                            int output_dim, uint64_t base_addr,
-                           unsigned starting_row, unsigned starting_col) {
+                           unsigned starting_row, unsigned starting_col)
+{
   int ch_idx = 0;
   int ra_idx = 0;
   int bg_idx = 0;
@@ -451,11 +515,13 @@ void PIMKernel::readResult(BurstType *resultBst, pimBankType pb_type,
   int bank_offset = (int)pb_type % 2;
   uint64_t addr;
 
-  for (int x = 0; x < output_dim; x += num_grf_) {
+  for (int x = 0; x < output_dim; x += num_grf_)
+  {
     unsigned row = starting_row;
     unsigned col = starting_col;
 
-    for (int grf_idx = 0; grf_idx < num_grf_; grf_idx++) {
+    for (int grf_idx = 0; grf_idx < num_grf_; grf_idx++)
+    {
       addr = pim_addr_mgr_->addrGenSafe(ch_idx, ra_idx, bg_idx,
                                         bank_idx + bank_offset, row, col);
       mem_->addTransaction(false, base_addr + addr, "output",
@@ -468,7 +534,8 @@ void PIMKernel::readResult(BurstType *resultBst, pimBankType pb_type,
 }
 
 void PIMKernel::executeEltwise(int dim, pimBankType pb_type, KernelType ktype,
-                               int input0_row, int result_row, int input1_row) {
+                               int input0_row, int result_row, int input1_row)
+{
   int num_tile =
       dim / (num_banks_ * num_pim_chans_ * num_pim_ranks_ * num_grf_);
   int num_jump_to_be_taken = num_tile - 1;
@@ -498,8 +565,10 @@ void PIMKernel::executeEltwise(int dim, pimBankType pb_type, KernelType ktype,
 }
 
 void PIMKernel::computeAddOrMul(int num_tile, int input0_row, int result_row,
-                                int input1_row) {
-  for (int i = 0; i < num_tile; i++) {
+                                int input1_row)
+{
+  for (int i = 0; i < num_tile; i++)
+  {
     int c = num_grf_ * i;
     for (int b = 0; b < 2; b++) // for even/odd banks, respectively
     {
@@ -515,7 +584,8 @@ void PIMKernel::computeAddOrMul(int num_tile, int input0_row, int result_row,
 
 void PIMKernel::executeKSKIP(int dim, pimBankType pb_type, KernelType ktype,
                              int input0_row, int result_row, int input1_row,
-                             int input2_row) {
+                             int input2_row)
+{
   // num_banks_ = 16
   // num_pim_chans_ = 64
   // num_pim_ranks_ = 1
@@ -548,13 +618,15 @@ void PIMKernel::executeKSKIP(int dim, pimBankType pb_type, KernelType ktype,
 }
 
 void PIMKernel::computeKSKIP(int num_tile, int input0_row, int result_row,
-                             int input1_row, int input2_row) {
+                             int input1_row, int input2_row)
+{
 
   // only 1 transaction to load MOD value so put it outside loop
   addTransactionAll(false, 0, 0, input2_row, 0, "BANK_TO_SRF_", &null_bst_,
                     true, 1);
 
-  for (int i = 0; i < num_tile; i++) {
+  for (int i = 0; i < num_tile; i++)
+  {
     int c = num_grf_ * i;
     // addTransactionAll(false, 0, 0, input0_row, c, "BANK_TO_GRF_", &null_bst_,
     //                   true, num_grf_);
@@ -573,14 +645,16 @@ void PIMKernel::computeKSKIP(int num_tile, int input0_row, int result_row,
     // // write result to odd bank
     // addTransactionAll(true, 0, 1, result_row, c, "GRF_TO_BANK", &null_bst_,
     //                   true, num_grf_);
-    for (int dnum = 0; dnum < FHE_DNUM; dnum++) {
+    for (int dnum = 0; dnum < FHE_DNUM; dnum++)
+    {
       addTransactionAll(false, 0, 0, input0_row, c, "BANK_TO_GRF_", &null_bst_,
                         true, num_grf_);
       // MUL + MOD
       addTransactionAll(false, 0, 0, input1_row, c, "MUL", &null_bst_, true,
                         num_grf_);
 
-      if (dnum != 0) {
+      if (dnum != 0)
+      {
         // ADD + MOD
         addTransactionAll(false, 0, 0, 0, 0, "ADD", &null_bst_, true, num_grf_);
       }
@@ -592,8 +666,51 @@ void PIMKernel::computeKSKIP(int num_tile, int input0_row, int result_row,
   }
 }
 
+// H: PTMul
+void PIMKernel::executePTMul(int dim, pimBankType pb_type, KernelType ktype, int input0_row,
+                             int result_row, int input1_row)
+{
+  int num_pcus_per_channel = num_banks_ / 2;
+  int num_pcus_total = num_pcus_per_channel * num_pim_chans_ * num_pim_ranks_;
+
+  int num_tile = dim / (num_pcus_total * num_grf_);
+  int num_jump_to_be_taken = num_tile - 1;
+
+  vector<PIMCmd> pim_cmds = PIMCmdGen::getPIMCmds(ktype, num_jump_to_be_taken, 0, 0);
+
+  setControl(&bst_hab_pim_, true, getToggleCond(pb_type), false, false);
+  setControl(&bst_hab_, false, getToggleCond(pb_type), false, false);
+
+  parkIn();
+  changePIMMode(dramMode::SB, dramMode::HAB);
+  programCrf(pim_cmds);
+  changePIMMode(dramMode::HAB, dramMode::HAB_PIM);
+
+  computePTMul(num_tile, input0_row, result_row, input1_row);
+
+  changePIMMode(dramMode::HAB_PIM, dramMode::HAB);
+  changePIMMode(dramMode::HAB, dramMode::SB);
+  parkOut();
+}
+
+// H: PTMul
+void PIMKernel::computePTMul(int num_tile, int input0_row, int result_row, int input1_row)
+{
+  for (int i = 0; i < num_tile; i++)
+  {
+    int c = num_grf_ * i;
+    // "addTransactionToAll" is like "all pim units are doing this"
+    addTransactionAll(false, 0, 0, input0_row, c, "BANK_TO_GRF_", &null_bst_, true,
+                      num_grf_);
+    addTransactionAll(false, 0, 0, input1_row, c, "MUL", &null_bst_, true, num_grf_);
+    addTransactionAll(false, 0, 0, input1_row, c, "MUL", &null_bst_, true, num_grf_);
+    addTransactionAll(true, 0, 0, result_row, c, "GRF_TO_BANK", &null_bst_, true, num_grf_);
+  }
+}
+
 void PIMKernel::executeTPROD(int dim, pimBankType pb_type, KernelType ktype,
-                             int input0_row, int result_row, int input1_row) {
+                             int input0_row, int result_row, int input1_row)
+{
   // num_banks_ = 16
   // num_pim_chans_ = 64
   // num_pim_ranks_ = 1
@@ -627,9 +744,11 @@ void PIMKernel::executeTPROD(int dim, pimBankType pb_type, KernelType ktype,
 }
 
 void PIMKernel::computeTPROD(int num_tile, int input0_row, int result_row,
-                             int input1_row) {
+                             int input1_row)
+{
 
-  for (int i = 0; i < num_tile; i++) {
+  for (int i = 0; i < num_tile; i++)
+  {
     int c = num_grf_ * i;
     addTransactionAll(false, 0, 0, input0_row, c, "BANK_TO_GRF_", &null_bst_,
                       true, num_grf_);
@@ -680,8 +799,10 @@ result_row, num_grf_ * i, "GRF_TO_BANK", &null_bst_, true, num_grf_);
 }
 */
 
-void PIMKernel::computeRelu(int num_tile, int input0_row, int result_row) {
-  for (int i = 0; i < num_tile; i++) {
+void PIMKernel::computeRelu(int num_tile, int input0_row, int result_row)
+{
+  for (int i = 0; i < num_tile; i++)
+  {
     int c = num_grf_ * i;
     addTransactionAll(false, 0, 0, input0_row, c, "FILL&ReLU", &null_bst_, true,
                       num_grf_);
@@ -695,28 +816,35 @@ void PIMKernel::computeRelu(int num_tile, int input0_row, int result_row) {
 }
 
 void PIMKernel::readData(BurstType *bst_data, size_t bst_cnt,
-                         unsigned starting_row, unsigned starting_col) {
+                         unsigned starting_row, unsigned starting_col)
+{
   uint64_t init_addr =
       pim_addr_mgr_->addrGenSafe(0, 0, 0, 0, starting_row, starting_col);
 
   for (uint64_t addr = init_addr, i = 0; i < bst_cnt;
-       addr += transaction_size_, i++) {
+       addr += transaction_size_, i++)
+  {
     mem_->addTransaction(false, addr, &bst_data[i]);
   }
 }
 
 void PIMKernel::adderTree(BurstType *result, int output_dim, int num_tile,
-                          int step, fp16 *temp) {
+                          int step, fp16 *temp)
+{
   if (num_tile == 1)
     return;
 
   int iter = num_tile / 2;
-  if (step == 0) {
-    for (int i = 0; i < iter; i++) {
+  if (step == 0)
+  {
+    for (int i = 0; i < iter; i++)
+    {
       temp[i] = result[2 * i * output_dim].fp16AdderTree() +
                 result[(2 * i + 1) * output_dim].fp16AdderTree();
     }
-  } else {
+  }
+  else
+  {
     for (int i = 0; i < iter; i++)
       temp[i] = temp[i * 2] + temp[i * 2 + 1];
 

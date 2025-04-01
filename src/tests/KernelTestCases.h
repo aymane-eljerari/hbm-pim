@@ -182,6 +182,12 @@ class PIMKernelFixture : public testing::Test
                 }
                 return;
             }
+            // H: PTMul
+            // Idk if I actually need this, is this just for numbers?
+            case KernelType::PTMUL:
+            {
+                // Empty
+            }
             case KernelType::ADD:
             case KernelType::MUL:
             case KernelType::RELU:

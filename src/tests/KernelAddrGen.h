@@ -92,6 +92,8 @@ enum class KernelType
     RELU,
     GEMV,
     MUL,
-    GEMVTREE
+    GEMVTREE,
+    // H: PTMul
+    PTMUL,
 };
 #endif
