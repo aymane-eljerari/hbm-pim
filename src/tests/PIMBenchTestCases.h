@@ -459,12 +459,16 @@ public:
     inputB: (1 * 2^16)/512 = 128 coeff (1024 bytes = 1 row)
     output: (2 * 2^16)/512 = 256 coeff (2048 bytes = 2 rows)
     */
-    // A
-    input_row0_ = 0;
-    // B
-    input_row1_ = 2;
-    // output
-    result_row_ = 3;
+    // A[0]
+    ct_input_row_0 = 0;
+    // A[1]
+    ct_input_row_1 = 1;
+    // B (plaintext)
+    pt_input_row_0 = 2;
+    // output[0]
+    output_row_0 = 3;
+    // output[1]
+    output_row_1 = 4;
   }
 
   uint64_t measureCycle(bool is_pim_ = false)
@@ -475,7 +479,7 @@ public:
     if (is_pim_ == true)
     {
       kernel_->executePTMul(dim_data_->output_npbst_.getTotalDim(), pimBankType::ALL_BANK,
-                            kernel_type_, input_row0_, result_row_, input_row1_);
+                            kernel_type_, ct_input_row_0, ct_input_row_1, pt_input_row_0, output_row_0, output_row_1);
       kernel_->runPIM();
       cycle = kernel_->getCycle();
     }
@@ -502,9 +506,11 @@ public:
 
 private:
   // for PIM
-  unsigned input_row0_;
-  unsigned input_row1_;
-  unsigned result_row_;
+  unsigned ct_input_row_0;
+  unsigned ct_input_row_1;
+  unsigned pt_input_row_0;
+  unsigned output_row_0;
+  unsigned output_row_1;
 };
 
 // H: HEAdd
@@ -533,12 +539,18 @@ public:
     inputB: (2 * 2^16)/512 = 256 coeff (2048 bytes = 2 rows)
     output: (2 * 2^16)/512 = 256 coeff (2048 bytes = 2 rows)
     */
-    // A
-    input_row0_ = 0;
-    // B
-    input_row1_ = 2;
-    // output
-    result_row_ = 4;
+    // ct0[0]
+    ct_0_input_row_0 = 0;
+    // ct0[1]
+    ct_0_input_row_1 = 1;
+    // ct1[0]
+    ct_1_input_row_0 = 2;
+    // ct1[1]
+    ct_1_input_row_1 = 3;
+    // output[0]
+    output_row_0 = 4;
+    // output[1]
+    output_row_1 = 5;
   }
 
   uint64_t measureCycle(bool is_pim_ = false)
@@ -549,7 +561,7 @@ public:
     if (is_pim_ == true)
     {
       kernel_->executeHEAdd(dim_data_->output_npbst_.getTotalDim(), pimBankType::ALL_BANK,
-                            kernel_type_, input_row0_, result_row_, input_row1_);
+                            kernel_type_, ct_0_input_row_0, ct_0_input_row_1, ct_1_input_row_0, ct_1_input_row_1, output_row_0, output_row_1);
       kernel_->runPIM();
       cycle = kernel_->getCycle();
     }
@@ -576,9 +588,12 @@ public:
 
 private:
   // for PIM
-  unsigned input_row0_;
-  unsigned input_row1_;
-  unsigned result_row_;
+  unsigned ct_0_input_row_0;
+  unsigned ct_0_input_row_1;
+  unsigned ct_1_input_row_0;
+  unsigned ct_1_input_row_1;
+  unsigned output_row_0;
+  unsigned output_row_1;
 };
 
 class PIMBenchFixture : public testing::Test

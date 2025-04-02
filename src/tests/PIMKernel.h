@@ -107,9 +107,8 @@ public:
                     int input2_row = 0);
   // H: HEADD
   void executeHEAdd(int dim, pimBankType bank_types, KernelType ktype,
-                      int input0_row, int result_row, int input1_row = 0);
-  void computeHEAdd(int numTile, int input0Row, int resultRow,
-                       int input1Row);
+                      int ct_0_input_row_0, int ct_0_input_row_1, int ct_1_input_row_0, int ct_1_input_row_1, int output_row_0, int output_row_1);
+  void computeHEAdd(int numTile, int ct_0_input_row_0, int ct_0_input_row_1, int ct_1_input_row_0, int ct_1_input_row_1, int output_row_0, int output_row_1);
   void executeTPROD(int dim, pimBankType pb_type, KernelType ktype,
                                int input0_row, int result_row, int input1_row);
   void computeGemv(NumpyBurstType *data, int num_input_tiles,
@@ -124,9 +123,9 @@ public:
   void computeRelu(int numTile, int input0Row, int resultRow);
   // void computeBn(int numTile, int input0Row, int resultRow);
   // H: PTMul
-  void computePTMul(int num_tile, int input0_row, int result_row, int input1_row);
-  void executePTMul(int dim, pimBankType pb_type, KernelType ktype, int input0_row,
-    int result_row, int input1_row);
+  void computePTMul(int num_tile, int ct_input_row_0, int ct_input_row_1, int pt_input_row_0, int output_row_0, int output_row_1);
+  void executePTMul(int dim, pimBankType pb_type, KernelType ktype, int ct_input_row_0, 
+                    int ct_input_row_1, int pt_input_row_0, int output_row_0, int output_row_1);
   void readResult(BurstType *resultBst, pimBankType bank_types, int output_dim,
                   uint64_t baseAddr = 0, unsigned startingRow = 0,
                   unsigned startingCol = 0);

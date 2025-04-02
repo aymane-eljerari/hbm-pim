@@ -667,8 +667,8 @@ void PIMKernel::computeKSKIP(int num_tile, int input0_row, int result_row,
 }
 
 // H: PTMul
-void PIMKernel::executePTMul(int dim, pimBankType pb_type, KernelType ktype, int input0_row,
-                             int result_row, int input1_row)
+void PIMKernel::executePTMul(int dim, pimBankType pb_type, KernelType ktype, int ct_input_row_0,
+                             int ct_input_row_1, int pt_input_row_0, int output_row_0, int output_row_1)
 {
   int num_pcus_per_channel = num_banks_ / 2;
   int num_pcus_total = num_pcus_per_channel * num_pim_chans_ * num_pim_ranks_;
@@ -676,7 +676,7 @@ void PIMKernel::executePTMul(int dim, pimBankType pb_type, KernelType ktype, int
   int num_tile = dim / (num_pcus_total * num_grf_);
   int num_jump_to_be_taken = num_tile - 1;
 
-  cout << "going to get commands" <<endl;
+  cout << "going to get commands" << endl;
   vector<PIMCmd> pim_cmds = PIMCmdGen::getPIMCmds(ktype, num_jump_to_be_taken, 0, 0);
   cout << "got commands" << endl;
   setControl(&bst_hab_pim_, true, getToggleCond(pb_type), false, false);
@@ -687,7 +687,7 @@ void PIMKernel::executePTMul(int dim, pimBankType pb_type, KernelType ktype, int
   programCrf(pim_cmds);
   changePIMMode(dramMode::HAB, dramMode::HAB_PIM);
 
-  computePTMul(num_tile, input0_row, result_row, input1_row);
+  computePTMul(num_tile, ct_input_row_0, ct_input_row_1, pt_input_row_0, output_row_0, output_row_1);
 
   changePIMMode(dramMode::HAB_PIM, dramMode::HAB);
   changePIMMode(dramMode::HAB, dramMode::SB);
@@ -695,23 +695,47 @@ void PIMKernel::executePTMul(int dim, pimBankType pb_type, KernelType ktype, int
 }
 
 // H: PTMul
-void PIMKernel::computePTMul(int num_tile, int input0_row, int result_row, int input1_row)
+void PIMKernel::computePTMul(int num_tile, int ct_input_row_0, int ct_input_row_1, int pt_input_row_0, int output_row_0, int output_row_1)
 {
+  // Load mod value
+  addTransactionAll(false, 0, 0, 0, 0, "BANK_TO_SRF_", &null_bst_,
+                    true, 1);
   for (int i = 0; i < num_tile; i++)
   {
+
     int c = num_grf_ * i;
-    // "addTransactionToAll" is like "all pim units are doing this"
-    addTransactionAll(false, 0, 0, input0_row, c, "BANK_TO_GRF_", &null_bst_, true,
+    // Old
+    // // "addTransactionToAll" is like "all pim units are doing this"
+    // addTransactionAll(false, 0, 0, input0_row, c, "BANK_TO_GRF_", &null_bst_, true,
+    //                   num_grf_);
+    // addTransactionAll(false, 0, 0, input1_row, c, "MUL", &null_bst_, true, num_grf_);
+    // addTransactionAll(false, 0, 0, input1_row, c, "MUL", &null_bst_, true, num_grf_);
+    // addTransactionAll(true, 0, 0, result_row, c, "GRF_TO_BANK", &null_bst_, true, num_grf_);
+
+    // TODO: Cant I fetch B[0] and mul A[0] and A[1]
+    // New
+    // Fetch A[0]
+    addTransactionAll(false, 0, 0, ct_input_row_0, c, "BANK_TO_GRF_", &null_bst_, true,
                       num_grf_);
-    addTransactionAll(false, 0, 0, input1_row, c, "MUL", &null_bst_, true, num_grf_);
-    addTransactionAll(false, 0, 0, input1_row, c, "MUL", &null_bst_, true, num_grf_);
-    addTransactionAll(true, 0, 0, result_row, c, "GRF_TO_BANK", &null_bst_, true, num_grf_);
+    // Mul A[0]
+    addTransactionAll(false, 0, 0, pt_input_row_0, c, "MUL", &null_bst_, true, num_grf_);
+    // Store res[0]
+    addTransactionAll(true, 0, 0, output_row_0, c, "GRF_TO_BANK", &null_bst_, true,
+                      num_grf_);
+
+    addTransactionAll(false, 0, 0, ct_input_row_1, c, "BANK_TO_GRF_", &null_bst_, true,
+                      num_grf_);
+    // Mul A[0]
+    addTransactionAll(false, 0, 0, pt_input_row_0, c, "MUL", &null_bst_, true, num_grf_);
+    // Store res[1]
+    addTransactionAll(true, 0, 0, output_row_1, c, "GRF_TO_BANK", &null_bst_, true,
+                      num_grf_);
+    // TODO: any storing?
   }
 }
 
 // H: HEAdd
-void PIMKernel::executeHEAdd(int dim, pimBankType pb_type, KernelType ktype, int input0_row,
-                             int result_row, int input1_row)
+void PIMKernel::executeHEAdd(int dim, pimBankType pb_type, KernelType ktype, int ct_0_input_row_0, int ct_0_input_row_1, int ct_1_input_row_0, int ct_1_input_row_1, int output_row_0, int output_row_1)
 {
   int num_pcus_per_channel = num_banks_ / 2;
   int num_pcus_total = num_pcus_per_channel * num_pim_chans_ * num_pim_ranks_;
@@ -729,27 +753,48 @@ void PIMKernel::executeHEAdd(int dim, pimBankType pb_type, KernelType ktype, int
   programCrf(pim_cmds);
   changePIMMode(dramMode::HAB, dramMode::HAB_PIM);
 
-  computeHEAdd(num_tile, input0_row, result_row, input1_row);
+  computeHEAdd(num_tile, ct_0_input_row_0, ct_0_input_row_1, ct_1_input_row_0, ct_1_input_row_1, output_row_0, output_row_1);
 
   changePIMMode(dramMode::HAB_PIM, dramMode::HAB);
   changePIMMode(dramMode::HAB, dramMode::SB);
   parkOut();
 }
 
-void PIMKernel::computeHEAdd(int num_tile, int input0_row, int result_row, int input1_row)
+void PIMKernel::computeHEAdd(int num_tile, int ct_0_input_row_0, int ct_0_input_row_1, int ct_1_input_row_0, int ct_1_input_row_1, int output_row_0, int output_row_1)
 {
+  // Load mod value
+  addTransactionAll(false, 0, 0, 0, 0, "BANK_TO_SRF_", &null_bst_,
+                    true, 1);
   for (int i = 0; i < num_tile; i++)
   {
     int c = num_grf_ * i;
-    // "addTransactionToAll" is like "all pim units are doing this"
-    addTransactionAll(false, 0, 0, input0_row, c, "BANK_TO_GRF_", &null_bst_, true,
+    // Old
+    // // "addTransactionToAll" is like "all pim units are doing this"
+    // addTransactionAll(false, 0, 0, input0_row, c, "BANK_TO_GRF_", &null_bst_, true,
+    //                   num_grf_);
+    // addTransactionAll(false, 0, 0, 0, 0, "ADD", &null_bst_, true, num_grf_);
+    // addTransactionAll(false, 0, 0, input0_row, c, "BANK_TO_GRF_", &null_bst_, true,
+    //                   num_grf_);
+    // addTransactionAll(false, 0, 0, 0, 0, "ADD", &null_bst_, true, num_grf_);
+    // addTransactionAll(true, 0, 0, result_row, c, "GRF_TO_BANK", &null_bst_, true, num_grf_);
+
+    // Fetch A[0]
+    addTransactionAll(false, 0, 0, ct_0_input_row_0, c, "BANK_TO_GRF_", &null_bst_, true,
                       num_grf_);
-    addTransactionAll(false, 0, 0, 0, 0, "ADD", &null_bst_, true, num_grf_);
-    addTransactionAll(false, 0, 0, input0_row, c, "BANK_TO_GRF_", &null_bst_, true,
-      num_grf_);
-    addTransactionAll(false, 0, 0, 0, 0, "ADD", &null_bst_, true, num_grf_);
-    addTransactionAll(true, 0, 0, result_row, c, "GRF_TO_BANK", &null_bst_, true, num_grf_);
-    
+    // A[0] + B[0]
+    addTransactionAll(false, 0, 0, ct_1_input_row_0, c, "ADD", &null_bst_, true, num_grf_);
+    // Store res[0]
+    addTransactionAll(true, 0, 0, output_row_0, c, "GRF_TO_BANK", &null_bst_, true,
+                      num_grf_);
+
+    // Fetch A[1]
+    addTransactionAll(false, 0, 0, ct_0_input_row_0, c, "BANK_TO_GRF_", &null_bst_, true,
+                      num_grf_);
+    // A[0] + B[1]
+    addTransactionAll(false, 0, 0, ct_1_input_row_1, c, "ADD", &null_bst_, true, num_grf_);
+    // Store res[1]
+    addTransactionAll(true, 0, 0, output_row_1, c, "GRF_TO_BANK", &null_bst_, true,
+                      num_grf_);
   }
 }
 

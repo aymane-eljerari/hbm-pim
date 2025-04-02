@@ -251,12 +251,17 @@ public:
   {
     vector<PIMCmd> pim_cmds;
 
+    // Load mod
+    pim_cmds.push_back(
+      PIMCmd(PIMCmdType::FILL, PIMOpdType::SRF_A, PIMOpdType::EVEN_BANK));
 
     vector<PIMCmd> tmp_cmds{
         // Load 4x 64-bit coefficients from B into GRF_A
         PIMCmd(PIMCmdType::FILL, PIMOpdType::GRF_A, PIMOpdType::EVEN_BANK),
         // GRF_A = GRF_A * A[0] (in even bank)
         PIMCmd(PIMCmdType::MUL, PIMOpdType::GRF_A, PIMOpdType::GRF_A, PIMOpdType::EVEN_BANK, 1),
+        // Load 2
+        PIMCmd(PIMCmdType::FILL, PIMOpdType::GRF_A, PIMOpdType::EVEN_BANK),
         PIMCmd(PIMCmdType::MUL, PIMOpdType::GRF_A, PIMOpdType::GRF_A, PIMOpdType::EVEN_BANK, 1),
         // PIMCmd(PIMCmdType::JUMP, 64, 4)
 
@@ -296,13 +301,21 @@ public:
     vector<PIMCmd> pim_cmds;
     // PIMCmdType pimType = getPIMCmdType();
 
+    // Load mod
+    pim_cmds.push_back(
+        PIMCmd(PIMCmdType::FILL, PIMOpdType::SRF_A, PIMOpdType::EVEN_BANK));
+
     vector<PIMCmd> tmp_cmds{
         // Load 4x 64-bit coefficients from A into GRF_A
         PIMCmd(PIMCmdType::FILL, PIMOpdType::GRF_A, PIMOpdType::EVEN_BANK),
-        // Add 4x 64-bit coefficients from B into GRF_A
+        // Add
         PIMCmd(PIMCmdType::ADD, PIMOpdType::GRF_A, PIMOpdType::GRF_A, PIMOpdType::EVEN_BANK, 1),
+        // TODO: Do I need to store?
+        // Add 4x 64-bit coefficients from B into GRF_A
+        // Load 4x 64-bit coefficients from A into GRF_A
         PIMCmd(PIMCmdType::FILL, PIMOpdType::GRF_A, PIMOpdType::EVEN_BANK),
-        PIMCmd(PIMCmdType::ADD, PIMOpdType::GRF_A, PIMOpdType::GRF_A, PIMOpdType::EVEN_BANK, 1)
+        // Add
+        PIMCmd(PIMCmdType::ADD, PIMOpdType::GRF_A, PIMOpdType::GRF_A, PIMOpdType::EVEN_BANK, 1),
 
     };
 
