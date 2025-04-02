@@ -253,17 +253,20 @@ public:
 
     // Load mod
     pim_cmds.push_back(
-      PIMCmd(PIMCmdType::FILL, PIMOpdType::SRF_A, PIMOpdType::EVEN_BANK));
+        PIMCmd(PIMCmdType::FILL, PIMOpdType::SRF_A, PIMOpdType::EVEN_BANK));
 
     vector<PIMCmd> tmp_cmds{
-        // Load 4x 64-bit coefficients from B into GRF_A
+        // Load 4x 64-bit coefficients from A[0] into GRF_A
         PIMCmd(PIMCmdType::FILL, PIMOpdType::GRF_A, PIMOpdType::EVEN_BANK),
-        // GRF_A = GRF_A * A[0] (in even bank)
+        // GRF_A = GRF_A * A[0]
         PIMCmd(PIMCmdType::MUL, PIMOpdType::GRF_A, PIMOpdType::GRF_A, PIMOpdType::EVEN_BANK, 1),
-        // Load 2
+        //! I should be storing here?
+        // Load 4x 64-bit coefficients from A[1] into GRF_A
         PIMCmd(PIMCmdType::FILL, PIMOpdType::GRF_A, PIMOpdType::EVEN_BANK),
+        // GRF_A = GRF_A * A[1]
         PIMCmd(PIMCmdType::MUL, PIMOpdType::GRF_A, PIMOpdType::GRF_A, PIMOpdType::EVEN_BANK, 1),
-        // PIMCmd(PIMCmdType::JUMP, 64, 4)
+
+        //! Mod operation?
 
     };
 

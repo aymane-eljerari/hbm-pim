@@ -485,7 +485,7 @@ public:
     }
     else
     {
-      // TODO: This is directly copied from KSK
+      //! This is directly copied from KSK
       uint32_t input_data_size_in_byte =
           dim_data_->getDataSize(dim_data_->input_dim_, dim_data_->batch_size_);
 
@@ -514,7 +514,7 @@ private:
 };
 
 // H: HEAdd
-//! Is this right or do I need to split A into A[0] amd A[1]
+//? Is this right or do I need to split A into A[0] amd A[1]
 class HEAddPIMBenchTest : public PIMBenchTestCase
 {
 public:
@@ -567,12 +567,15 @@ public:
     }
     else
     {
-      // TODO: This is directly copied from KSK
+      //! This is directly copied from KSK
+      //! Maybe this data size is too small
       uint32_t input_data_size_in_byte =
           dim_data_->getDataSize(dim_data_->input_dim_, dim_data_->batch_size_);
+      // cout << "input_data_size_in_byte: " << input_data_size_in_byte << endl;
 
       uint32_t output_data_size_in_byte = dim_data_->getDataSize(
           dim_data_->output_dim_, dim_data_->batch_size_);
+      // cout << "output_data_size_in_byte: " << output_data_size_in_byte << endl;
 
       starting_addr =
           genMemTraffic(mem_, false, input_data_size_in_byte, starting_addr);

@@ -698,6 +698,7 @@ void PIMKernel::executePTMul(int dim, pimBankType pb_type, KernelType ktype, int
 void PIMKernel::computePTMul(int num_tile, int ct_input_row_0, int ct_input_row_1, int pt_input_row_0, int output_row_0, int output_row_1)
 {
   // Load mod value
+  //? ..and do nothing with it?
   addTransactionAll(false, 0, 0, 0, 0, "BANK_TO_SRF_", &null_bst_,
                     true, 1);
   for (int i = 0; i < num_tile; i++)
@@ -730,7 +731,7 @@ void PIMKernel::computePTMul(int num_tile, int ct_input_row_0, int ct_input_row_
     // Store res[1]
     addTransactionAll(true, 0, 0, output_row_1, c, "GRF_TO_BANK", &null_bst_, true,
                       num_grf_);
-    // TODO: any storing?
+    //! mod?
   }
 }
 
@@ -769,7 +770,7 @@ void PIMKernel::computeHEAdd(int num_tile, int ct_0_input_row_0, int ct_0_input_
   {
     int c = num_grf_ * i;
     // Old
-    // // "addTransactionToAll" is like "all pim units are doing this"
+    // "addTransactionToAll" is like "all pim units are doing this"
     // addTransactionAll(false, 0, 0, input0_row, c, "BANK_TO_GRF_", &null_bst_, true,
     //                   num_grf_);
     // addTransactionAll(false, 0, 0, 0, 0, "ADD", &null_bst_, true, num_grf_);
@@ -795,6 +796,8 @@ void PIMKernel::computeHEAdd(int num_tile, int ct_0_input_row_0, int ct_0_input_
     // Store res[1]
     addTransactionAll(true, 0, 0, output_row_1, c, "GRF_TO_BANK", &null_bst_, true,
                       num_grf_);
+
+    //! mod?
   }
 }
 
